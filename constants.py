@@ -1,10 +1,18 @@
 """
-Initialization and other data for the OORMS system.
 
-Submitting lab group: [your names here]
-Submission date: [date here]
+    Description:
 
-Original code by EEE320 instructors.
+    Initialization and other data for the OORMS system.
+
+    Notes:
+        - None for now
+
+
+    Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
+    Submission date: November 24th, 2022
+
+    Original code by EEE320 instructors.
+
 """
 
 # Restaurant data

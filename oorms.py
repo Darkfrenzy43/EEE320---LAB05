@@ -1,13 +1,27 @@
 """
-Provides the user interface for the Object-oriented Restaurant Management
-application (OORMS). This includes the server's view and a window simulating
-the tape of a bill printer.
 
-Submitting lab group: [your names here]
-Submission date: [date here]
+    Description:
 
-Original code by EEE320 instructors.
+    Provides the user interface for the Object-oriented Restaurant Management
+    application (OORMS). This includes the server's view and a window simulating
+    the tape of a bill printer.
+
+    Notes:
+        - None for now
+
+
+    Status:
+        - Velasco (November 4, 2022): Reading code for first time and commenting as needed
+
+
+
+    Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
+    Submission date: November 24th, 2022
+
+    Original code by EEE320 instructors.
 """
+
+# --- Importing Libraries and Modules ---
 
 import math
 import tkinter as tk
@@ -18,9 +32,14 @@ from controller import RestaurantController
 from model import Restaurant
 
 
+# --- Defining Classes ---
+
 class RestaurantView(tk.Frame, ABC):
+    """  An abstract superclass for the views in the system. """
 
     def __init__(self, master, restaurant, window_width, window_height, controller_class):
+        """ Constructor to RestaurantView class. """
+
         super().__init__(master)
         self.grid()
         self.canvas = tk.Canvas(self, width=window_width, height=window_height,
@@ -32,8 +51,11 @@ class RestaurantView(tk.Frame, ABC):
         self.controller = controller_class(self, restaurant)
         self.controller.create_ui()
 
+
     def make_button(self, text, action, size=BUTTON_SIZE, location=BUTTON_BOTTOM_RIGHT,
                     rect_style=BUTTON_STYLE, text_style=BUTTON_TEXT_STYLE):
+        """ Provided method that handles button creation in the views. """
+
         w, h = size
         x0, y0 = location
         box = self.canvas.create_rectangle(x0, y0, x0 + w, y0 + h, **rect_style)
@@ -41,20 +63,40 @@ class RestaurantView(tk.Frame, ABC):
         self.canvas.tag_bind(box, '<Button-1>', action)
         self.canvas.tag_bind(label, '<Button-1>', action)
 
+
     def update(self):
+        """ Method calls current controller's create_ui() method which tells this view re-draw the user interface. """
         self.controller.create_ui()
 
     def set_controller(self, controller):
+        """ Method switches current controller object to <controller> object passed through args. """
         self.controller = controller
 
 
 class ServerView(RestaurantView):
+    """ Inherits RestaurantView class.
+
+    This view appears on the left window when the system is run. View contains the entire view of the restaurant -
+    including the tables and chairs in it - and when pressed, shows the order views of the associated tables and chairs.
+    Same view found in Lab 3. """
 
     def __init__(self, master, restaurant, printer_window):
+        """ Constructor to ServerView. """
+
+        # Calling superclass constructor
         super().__init__(master, restaurant, SERVER_VIEW_WIDTH, SERVER_VIEW_HEIGHT, RestaurantController)
+
+        # Initializing the printer window
         self.printer_window = printer_window
 
+
     def create_restaurant_ui(self):
+        """ This method gets called in the RestaurantController object.
+
+        When called, uses tkinter's provided canvas methods to create the restaurant's user interface.
+        More specifically, it calls the methods that draws out the tables, and defines the function handler
+        in the event a table is touched. """
+
         self.canvas.delete(tk.ALL)
         view_ids = []
         for ix, table in enumerate(self.restaurant.tables):
@@ -72,6 +114,14 @@ class ServerView(RestaurantView):
                 self.canvas.tag_bind(seat_id, '<Button-1>', table_touch_handler)
 
     def create_table_ui(self, table):
+        """ This method Is called within the TableController object.
+
+        The Table object that was selected is the <table> passed through the argument.
+
+        When a specific table/chair is clicked, method uses provided tkinter methods to create the clicked upon table's
+        user interface by drawing it and its selected chairs onto the canvas, and defines the handler for when a given
+        seat is clicked on. """
+
         self.canvas.delete(tk.ALL)
         table_id, seat_ids = self.draw_table(table, location=SINGLE_TABLE_LOCATION)
         for ix, seat_id in enumerate(seat_ids):
@@ -85,7 +135,15 @@ class ServerView(RestaurantView):
                 action=lambda event: self.controller.make_bills(self.printer_window),
                 location=BUTTON_BOTTOM_LEFT)
 
+
     def draw_table(self, table, location=None, scale=1):
+        """ Uses Tkinter's provided canvas methods to draw a given table object out onto the canvas.
+
+        <table> is the table object to be drawn, <location, defaulted to None> refers to where the table object
+        is to be drawn on the canvas, and <scale, defaulted to 1> is how large the table is to be drawn.
+
+        Returns the IDs of the table and seats created by tkinter for event binding with the handlers."""
+
         offset_x0, offset_y0 = location if location else table.location
         seats_per_side = math.ceil(table.n_seats / 2)
         table_height = SEAT_DIAM * seats_per_side + SEAT_SPACING * (seats_per_side - 1)
@@ -107,6 +165,13 @@ class ServerView(RestaurantView):
         return table_id, seat_ids
 
     def create_order_ui(self, order):
+        """ This method is called within the OrderController object.
+
+        Uses tkinter's provided methods to create the user interface of the order menu
+        when a given seat object is selected from the table user interface.
+
+        <order> is the order object that is to track all the orders made for the selected seat. """
+
         self.canvas.delete(tk.ALL)
         for ix, item in enumerate(self.restaurant.menu_items):
             w, h, margin = MENU_ITEM_SIZE
@@ -121,7 +186,10 @@ class ServerView(RestaurantView):
         self.make_button('Cancel', lambda event: self.controller.cancel_changes(), location=BUTTON_BOTTOM_LEFT)
         self.make_button('Update Order', lambda event: self.controller.update_order())
 
+
     def draw_order(self, order):
+        """ Draws out the orders placed after pressing a menu item button.  """
+
         x0, h, m = ORDER_ITEM_LOCATION
         for ix, item in enumerate(order.items):
             y0 = m + ix * h
@@ -142,13 +210,16 @@ class ServerView(RestaurantView):
 
 
 class Printer(tk.Frame):
-    """
-    Simulates a physical printer with a monospaced font, a maximum of 40 characters
-    wide. To print, call the print() method passing the desired text as a parameter.
+    """ Simulates a physical printer with a monospaced font, a maximum of 40 characters wide.
+
+    To print, call the print() method passing the desired text as a parameter.
     The text may include \n (newline) characters to indicate line breaks.
     """
 
     def __init__(self, master):
+        """ Constructor of the Printer object. """
+
+        # Initialize a bunch of stuff here idk. (lol yee love these comments)
         super().__init__(master)
         self.grid()
         scrollbar = tk.Scrollbar(self)
@@ -160,12 +231,18 @@ class Printer(tk.Frame):
         scrollbar.config(command=self.tape.yview)
 
     def print(self, text):
+        """ Prints a bill object. """
+
+        # This stuff we changing ?
         self.tape['state'] = tk.NORMAL
         self.tape.insert(tk.END, text)
         self.tape.insert(tk.END, '\n')
         self.tape['state'] = tk.DISABLED
         self.tape.see(tk.END)
 
+
+
+# --- Defining Separate Functions ---
 
 def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
     return ((offset_x0 + x0) * scale,
@@ -174,7 +251,11 @@ def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
             (offset_y0 + y0 + height) * scale)
 
 
+
+# --- Entry Point ---
+
 if __name__ == "__main__":
+
     root = tk.Tk()
 
     printer_window = tk.Toplevel()
