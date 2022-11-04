@@ -78,7 +78,13 @@ class TableController(Controller):
         # for this table. The following line illustrates how bill printing works, but the
         # actual printing should happen in the (new) controller, not here.
 
+        # Switching the payment controller of the bill pressed
+        self.view.set_controller(PaymentController(self.view, self.table, self.restaurant));
+        self.view.update();
+
+        # Print shit in the printer
         printer.print(f'Set up bills for table {self.restaurant.tables.index(self.table)}')
+
 
     def done(self):
         """ Method returns the controller back to RestaurantController - setting the user interface back
@@ -136,3 +142,32 @@ class OrderController(Controller):
         self.order.remove_unordered_items()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.restaurant.notify_views()
+
+
+class PaymentController(Controller):
+    """ Handles events from the Payment UI. """
+
+    # Idk if we need this.
+    def __init__(self, view, table, restaurant):
+        """ Class constructor. """
+
+        # Superclass constructor
+        super().__init__(view, table);
+
+        self. restaurant = restaurant;
+
+
+    def create_ui(self):
+        """ Legit creates ui back in the view. """
+        self.view.create_payment_ui();
+
+
+class BillController(Controller):
+    """ Handles events from the Bill UI. """
+
+    def create_ui(self):
+        """ legit creates ui back in the view. """
+        self.view.create_bill_ui();
+
+
+    # ...

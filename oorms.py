@@ -11,7 +11,12 @@
 
 
     Status:
-        - Velasco (November 4, 2022): Reading code for first time and commenting as needed
+        - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
+        - Velasco (November 4, 2022): Beginning rough implementation of planned Payment UI
+            - Create the UI
+                - Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
+            - Create the controller
+            - Create the model? <-- Is this needed
 
 
 
@@ -131,9 +136,12 @@ class ServerView(RestaurantView):
             self.canvas.tag_bind(seat_id, '<Button-1>', handler)
         self.make_button('Done', action=lambda event: self.controller.done())
         if table.has_any_active_orders():
+
+            # This button opens up the Payment UI
             self.make_button('Create Bills', 
                 action=lambda event: self.controller.make_bills(self.printer_window),
                 location=BUTTON_BOTTOM_LEFT)
+
 
 
     def draw_table(self, table, location=None, scale=1):
@@ -207,6 +215,21 @@ class ServerView(RestaurantView):
         self.canvas.create_text(x0, m + len(order.items) * h,
                                 text=f'Total: {order.total_cost():.2f}',
                                 anchor=tk.NW)
+
+
+    # ----- Adding some of my own shit here let's do this
+    def create_payment_ui(self):
+        """ This shit creates the payment ui that we have in our UI concept design idk. """
+
+        # Start be clearing canvas
+        self.canvas.delete(tk.ALL);
+
+        # Let's try creating some buttons and stuff (fuck around i guess)
+        self.canvas.create_text(10, 10, text = "I fucking love coding.", anchor = tk.NW);
+
+
+
+
 
 
 class Printer(tk.Frame):
