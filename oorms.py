@@ -14,13 +14,14 @@
         - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
         - Velasco (November 4, 2022): Beginning rough implementation of planned Payment UI
             - Create the UI
-                - Velasco: Re-sizing of the canvas window was found (use canvas.config(...))
+                - Velasco COMPLETED: Re-sizing of the canvas window was found (use canvas.config(...))
                 - Delete: Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
-                - Velasco: Creating EXIT button that returns UI to table view
+                - Velasco COMPLETED: Creating EXIT button that returns UI to table view
                 - Mohammed: Creating the button layout
 
 
             - Create the controller
+                - Velasco: Applicable buttons created.
             - Create the model? <-- Is this needed
 
 
