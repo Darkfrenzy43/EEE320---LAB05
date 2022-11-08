@@ -46,6 +46,8 @@ from model import Restaurant
 class RestaurantView(tk.Frame, ABC):
     """  An abstract superclass for the views in the system. """
 
+
+
     def __init__(self, master, restaurant, window_width, window_height, controller_class):
         """ Constructor to RestaurantView class. """
 
@@ -92,6 +94,9 @@ class ServerView(RestaurantView):
     This view appears on the left window when the system is run. View contains the entire view of the restaurant -
     including the tables and chairs in it - and when pressed, shows the order views of the associated tables and chairs.
     Same view found in Lab 3. """
+
+    # Fucking around
+    fuck_button_pressed = False;
 
     def __init__(self, master, restaurant, printer_window):
         """ Constructor to ServerView. """
@@ -246,21 +251,18 @@ class ServerView(RestaurantView):
 
         # Let's try creating some buttons and stuff (fuck around i guess)
         self.canvas.create_text(this_width/2, this_height/2, text = "I fucking love coding.", anchor = tk.CENTER);
-        self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_pressed(), location = (this_width/2 - 50, this_height/2 + 20));
+        self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_button_pressed(), location =
+            (this_width/2 - 50, this_height/2 + 20));
 
         # Create an exit button that returns back to table view
-        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (0, 0));
+        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
 
+        if self.fuck_button_pressed is True:
 
-    def fuck_payment_update(self):
-        """ Shit that gets called when fuck around button pressed. """
+            self.canvas.create_text(this_width / 2, this_height / 2 + 100,
+                                    text = "\"Velasco, what are you saying? I've literally never said that though.\" "
+                                           "\n-Eric Cho (based)", anchor = tk.CENTER);
 
-        this_width = PAYMENT_VIEW_WIDTH;
-        this_height = PAYMENT_VIEW_HEIGHT;
-
-        self.canvas.create_text(this_width/2, this_height/2 + 100,
-                                text = "\"Velasco, what are you saying? I've literally never said that though.\" "
-                                       "\n-Eric Cho (based)", anchor = tk.CENTER);
 
 
 class Printer(tk.Frame):

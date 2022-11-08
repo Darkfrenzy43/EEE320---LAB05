@@ -16,6 +16,8 @@
 """
 
 
+
+
 class Controller:
 
     def __init__(self, view, restaurant):
@@ -79,7 +81,8 @@ class TableController(Controller):
         # actual printing should happen in the (new) controller, not here.
 
         # Switching the payment controller of the bill pressed
-        self.view.set_controller(PaymentController(self.view, self.table, self.restaurant));
+        this_control = PaymentController(self.view, self.restaurant, self.table);
+        self.view.set_controller(this_control);
         self.view.update();
 
         # Print shit in the printer
@@ -148,16 +151,14 @@ class PaymentController(Controller):
     """ Handles events from the Payment UI. """
 
 
-    # Idk if we need this.
-    def __init__(self, view, table, restaurant):
+    def __init__(self, view, restaurant, table):
         """ Class constructor. """
 
-        # Saving the objects passed through args
-        self.table = table;
-        self.restaurant = restaurant;
-
         # Superclass constructor
-        super().__init__(view, table);
+        super().__init__(view, restaurant);
+
+        # Saving the table passed in as an attribute
+        self.table = table;
 
 
     def create_ui(self):
@@ -165,16 +166,23 @@ class PaymentController(Controller):
         self.view.create_payment_ui();
 
 
-    def fuck_around_pressed(self):
+    def fuck_around_button_pressed(self):
         """ Legit the handler when fuck around button gets pressed. """
 
         # do the fuck around shit
-        self.view.fuck_payment_update();
+        self.view.fuck_button_pressed = True;
+        self.view.update();
 
 
     def exit_pressed(self):
         """ Handler that exits Payment UI back to table view. """
-        self.view.set_controller(TableController(self.view, self.restaurant, self.table));
+
+        # Turning off button
+        self.view.fuck_button_pressed = False;
+
+        # switching controller
+        this_control = TableController(self.view, self.restaurant, self.table);
+        self.view.set_controller(this_control);
         self.view.update()
 
 
