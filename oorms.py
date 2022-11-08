@@ -14,10 +14,11 @@
         - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
         - Velasco (November 4, 2022): Beginning rough implementation of planned Payment UI
             - Create the UI
-                - Re-sizing of the canvas window was found (use canvas.config(...))
-                - Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
-                - Creating temp button that returns UI to table view
-                    - TODO - resolve "table object not found" issue when exited Payment UI.
+                - Velasco: Re-sizing of the canvas window was found (use canvas.config(...))
+                - Delete: Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
+                - Velasco: Creating EXIT button that returns UI to table view
+                - Mohammed: Creating the button layout
+
 
             - Create the controller
             - Create the model? <-- Is this needed
@@ -95,7 +96,7 @@ class ServerView(RestaurantView):
     including the tables and chairs in it - and when pressed, shows the order views of the associated tables and chairs.
     Same view found in Lab 3. """
 
-    # Fucking around
+    # Boolean for the Payment UI button
     fuck_button_pressed = False;
 
     def __init__(self, master, restaurant, printer_window):
@@ -130,6 +131,7 @@ class ServerView(RestaurantView):
             self.canvas.tag_bind(table_id, '<Button-1>', table_touch_handler)
             for seat_id in seat_ids:
                 self.canvas.tag_bind(seat_id, '<Button-1>', table_touch_handler)
+
 
     def create_table_ui(self, table):
         """ This method Is called within the TableController object.
@@ -257,6 +259,7 @@ class ServerView(RestaurantView):
         # Create an exit button that returns back to table view
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
 
+        # Playing with interface buttons
         if self.fuck_button_pressed is True:
 
             self.canvas.create_text(this_width / 2, this_height / 2 + 100,
