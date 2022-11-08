@@ -152,10 +152,12 @@ class PaymentController(Controller):
     def __init__(self, view, table, restaurant):
         """ Class constructor. """
 
+        # Saving the objects passed through args
+        self.table = table;
+        self.restaurant = restaurant;
+
         # Superclass constructor
         super().__init__(view, table);
-
-        self. restaurant = restaurant;
 
 
     def create_ui(self):
@@ -168,6 +170,13 @@ class PaymentController(Controller):
 
         # do the fuck around shit
         self.view.fuck_payment_update();
+
+
+    def exit_pressed(self):
+        """ Handler that exits Payment UI back to table view. """
+        self.view.set_controller(TableController(self.view, self.restaurant, self.table));
+        self.view.update()
+
 
 
 class BillController(Controller):

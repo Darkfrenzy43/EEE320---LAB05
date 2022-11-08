@@ -16,6 +16,8 @@
             - Create the UI
                 - Re-sizing of the canvas window was found (use canvas.config(...))
                 - Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
+                - Creating temp button that returns UI to table view
+                    - TODO - resolve "table object not found" issue when exited Payment UI.
 
             - Create the controller
             - Create the model? <-- Is this needed
@@ -133,6 +135,9 @@ class ServerView(RestaurantView):
         user interface by drawing it and its selected chairs onto the canvas, and defines the handler for when a given
         seat is clicked on. """
 
+        # Configuring size of window here to be designed size - doesn't do anything if already of that size
+        self.canvas.config(width=SERVER_VIEW_WIDTH, height=SERVER_VIEW_HEIGHT);
+
         self.canvas.delete(tk.ALL)
         table_id, seat_ids = self.draw_table(table, location=SINGLE_TABLE_LOCATION)
         for ix, seat_id in enumerate(seat_ids):
@@ -185,6 +190,8 @@ class ServerView(RestaurantView):
         when a given seat object is selected from the table user interface.
 
         <order> is the order object that is to track all the orders made for the selected seat. """
+
+
 
         self.canvas.delete(tk.ALL)
         for ix, item in enumerate(self.restaurant.menu_items):
@@ -239,9 +246,10 @@ class ServerView(RestaurantView):
 
         # Let's try creating some buttons and stuff (fuck around i guess)
         self.canvas.create_text(this_width/2, this_height/2, text = "I fucking love coding.", anchor = tk.CENTER);
-
-        # self.canvas.create_text(this_width/2, this_height/2 + 100, text = "Click me. Do it.", anchor = tk.S);
         self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_pressed(), location = (this_width/2 - 50, this_height/2 + 20));
+
+        # Create an exit button that returns back to table view
+        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (0, 0));
 
 
     def fuck_payment_update(self):
@@ -253,9 +261,6 @@ class ServerView(RestaurantView):
         self.canvas.create_text(this_width/2, this_height/2 + 100,
                                 text = "\"Velasco, what are you saying? I've literally never said that though.\" "
                                        "\n-Eric Cho (based)", anchor = tk.CENTER);
-
-
-
 
 
 class Printer(tk.Frame):
