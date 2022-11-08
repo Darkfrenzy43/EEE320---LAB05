@@ -14,7 +14,9 @@
         - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
         - Velasco (November 4, 2022): Beginning rough implementation of planned Payment UI
             - Create the UI
+                - Re-sizing of the canvas window was found (use canvas.config(...))
                 - Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
+
             - Create the controller
             - Create the model? <-- Is this needed
 
@@ -44,6 +46,10 @@ class RestaurantView(tk.Frame, ABC):
 
     def __init__(self, master, restaurant, window_width, window_height, controller_class):
         """ Constructor to RestaurantView class. """
+
+        # Saving master arg as attribute
+        self.master = master;
+
 
         super().__init__(master)
         self.grid()
@@ -217,16 +223,36 @@ class ServerView(RestaurantView):
                                 anchor=tk.NW)
 
 
+
+
     # ----- Adding some of my own shit here let's do this
     def create_payment_ui(self):
         """ This shit creates the payment ui that we have in our UI concept design idk. """
 
-        # Start be clearing canvas
+        this_width = PAYMENT_VIEW_WIDTH;
+        this_height = PAYMENT_VIEW_HEIGHT;
+
+        # Resize the canvas to payment UI dimensions, and clear canvas
+        self.canvas.config(width = this_width, height = this_height);
         self.canvas.delete(tk.ALL);
 
-        # Let's try creating some buttons and stuff (fuck around i guess)
-        self.canvas.create_text(10, 10, text = "I fucking love coding.", anchor = tk.NW);
 
+        # Let's try creating some buttons and stuff (fuck around i guess)
+        self.canvas.create_text(this_width/2, this_height/2, text = "I fucking love coding.", anchor = tk.CENTER);
+
+        # self.canvas.create_text(this_width/2, this_height/2 + 100, text = "Click me. Do it.", anchor = tk.S);
+        self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_pressed(), location = (this_width/2 - 50, this_height/2 + 20));
+
+
+    def fuck_payment_update(self):
+        """ Shit that gets called when fuck around button pressed. """
+
+        this_width = PAYMENT_VIEW_WIDTH;
+        this_height = PAYMENT_VIEW_HEIGHT;
+
+        self.canvas.create_text(this_width/2, this_height/2 + 100,
+                                text = "\"Velasco, what are you saying? I've literally never said that though.\" "
+                                       "\n-Eric Cho (based)", anchor = tk.CENTER);
 
 
 
@@ -279,6 +305,7 @@ def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
 
 if __name__ == "__main__":
 
+    # root is the window
     root = tk.Tk()
 
     printer_window = tk.Toplevel()

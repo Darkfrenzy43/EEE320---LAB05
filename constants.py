@@ -53,8 +53,14 @@ SEAT_SPACING = 10
 EMPTY_SEAT_STYLE = {'fill': '#ccc', 'outline': '#999'}
 FULL_SEAT_STYLE = {'fill': '#090', 'outline': '#090'}
 
-SERVER_VIEW_WIDTH = 380
+SERVER_VIEW_WIDTH = 380 # Changed for debugging
 SERVER_VIEW_HEIGHT = 500
+
+PAYMENT_VIEW_WIDTH = 600;
+PAYMENT_VIEW_HEIGHT = 500;
+
+# BILL_VIEW_WIDTH =
+# BILL_VIEW_HEIGHT =
 
 # Printer constants
 

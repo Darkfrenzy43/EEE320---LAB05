@@ -147,6 +147,7 @@ class OrderController(Controller):
 class PaymentController(Controller):
     """ Handles events from the Payment UI. """
 
+
     # Idk if we need this.
     def __init__(self, view, table, restaurant):
         """ Class constructor. """
@@ -160,6 +161,13 @@ class PaymentController(Controller):
     def create_ui(self):
         """ Legit creates ui back in the view. """
         self.view.create_payment_ui();
+
+
+    def fuck_around_pressed(self):
+        """ Legit the handler when fuck around button gets pressed. """
+
+        # do the fuck around shit
+        self.view.fuck_payment_update();
 
 
 class BillController(Controller):
