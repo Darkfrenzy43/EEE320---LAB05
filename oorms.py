@@ -280,25 +280,9 @@ class ServerView(RestaurantView):
         # Getting the seats.
         seat_orders = table.return_orders();
 
-        # Drawing the seats and their orders above
+        # Drawing the seats and their orders above (maybe change this to have the loop happen in the function?)
         for this_order in seat_orders:
-
-            # Dummy var for current seat number
-            curr_num = this_order.get_seat_number();
-
-            # Drawing out seats and their order items
-            self.canvas.create_text(50 + 105 * curr_num, 20, text = "Seat " + str(curr_num), anchor = tk.CENTER);
-
-            # Dummy var to track order item number
-            item_counter = 1;
-
-            # Drawing the items
-            for this_item in this_order.items:
-                name = this_item.details.name;
-                self.canvas.create_text(5 + 105 * curr_num, 25 + 15 * item_counter, text = name, anchor = tk.W,
-                                        font = ("Calibri", 8));
-                item_counter += 1;
-
+            draw_seat_info(self.canvas, this_order, (50, 20), (5, 25), 105, 15);
 
 
         # Playing with interface buttons
@@ -307,6 +291,42 @@ class ServerView(RestaurantView):
             self.canvas.create_text(this_width / 2, this_height / 2 + 100,
                                     text = "\"Velasco, what are you saying? I've literally never said that though.\" "
                                            "\n-Eric Cho (based)", anchor = tk.CENTER);
+
+
+def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_interval):
+    """ For the PAYMENT UI - function draws the text for each of the seat orders at the top of the UI.
+
+    <canvas : tk.Canvas > : the canvas of which the UI is being drawn on
+    <seat_order : Order> : the specific order object of the seat whose info is being drawn out
+    <anchor : (int, int)> : the location the first seat order is to be drawn onto the canvas. The remaining
+        seat orders are to be positioned in relation to the first one.
+    <order_anchor : (int, int)> : the location of where the first item of the first seat order is to be drawn.
+        The remaining seat order items for this seat and the rest of the seats are to be positioned in relation
+        to this anchor.
+    <interval : int> : the distance each seat order is to be separated from each other.
+    <order_interval : int> : the distance the order items are to be drawn vertically from each other.
+    """
+
+    # Unpacking coordinates from anchors
+    x_cood = anchor[0];
+    y_cood = anchor[1];
+    x_order = order_anchor[0];
+    y_order = order_anchor[1];
+
+    # Getting the seat number
+    seat_num = seat_order.get_seat_number();
+
+    # First, draw out the seat number onto the canvas
+    canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER)
+
+    # Dummy counter to draw order items on different lines.
+    item_counter = 1;
+
+    for this_item in seat_order.items:
+        name = this_item.details.name;
+        canvas.create_text(x_order + interval * seat_num, y_order + order_interval * item_counter, text=name,
+                                anchor=tk.W, font=("Calibri", 8));
+        item_counter += 1;
 
 
 
