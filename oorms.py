@@ -18,11 +18,15 @@
                 - Delete: Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
                 - Velasco COMPLETED: Creating EXIT button that returns UI to table view
                 - Mohammed: Creating the button layout
-
-
             - Create the controller
-                - Velasco: Applicable buttons created.
-            - Create the model? <-- Is this needed
+                - Velasco and Mohammed: Created as needed
+            - Create the model
+                - Creating the bill object
+
+    To do list:
+        - Refactor the seat drawing code.
+        - Implement the bill object
+            -
 
 
 
@@ -37,6 +41,7 @@
 import math
 import tkinter as tk
 from abc import ABC
+
 
 from constants import *
 from controller import RestaurantController
@@ -110,6 +115,7 @@ class ServerView(RestaurantView):
         self.printer_window = printer_window
 
 
+
     def create_restaurant_ui(self):
         """ This method gets called in the RestaurantController object.
 
@@ -156,7 +162,7 @@ class ServerView(RestaurantView):
         self.make_button('Done', action=lambda event: self.controller.done())
         if table.has_any_active_orders():
 
-            # This button opens up the Payment UI
+            # This button opens up the Payment UI for the current table
             self.make_button('Create Bills', 
                 action=lambda event: self.controller.make_bills(self.printer_window),
                 location=BUTTON_BOTTOM_LEFT)
@@ -240,9 +246,16 @@ class ServerView(RestaurantView):
 
 
 
-    # ----- Adding some of my own shit here let's do this
-    def create_payment_ui(self):
-        """ This shit creates the payment ui that we have in our UI concept design idk. """
+    # ----- PAYMENT UI CODE -------
+
+
+
+
+    def create_payment_ui(self, table):
+        """ This shit creates the payment ui that we have in our UI concept design idk.
+
+        <table> is the table whose payment UI is being accessed. """
+
 
         this_width = PAYMENT_VIEW_WIDTH;
         this_height = PAYMENT_VIEW_HEIGHT;
@@ -252,6 +265,8 @@ class ServerView(RestaurantView):
         self.canvas.delete(tk.ALL);
 
 
+
+
         # Let's try creating some buttons and stuff (fuck around i guess)
         self.canvas.create_text(this_width/2, this_height/2, text = "I fucking love coding.", anchor = tk.CENTER);
         self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_button_pressed(), location =
@@ -259,6 +274,32 @@ class ServerView(RestaurantView):
 
         # Create an exit button that returns back to table view
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
+
+
+
+        # Getting the seats.
+        seat_orders = table.return_orders();
+
+        # Drawing the seats and their orders above
+        for this_order in seat_orders:
+
+            # Dummy var for current seat number
+            curr_num = this_order.get_seat_number();
+
+            # Drawing out seats and their order items
+            self.canvas.create_text(50 + 105 * curr_num, 20, text = "Seat " + str(curr_num), anchor = tk.CENTER);
+
+            # Dummy var to track order item number
+            item_counter = 1;
+
+            # Drawing the items
+            for this_item in this_order.items:
+                name = this_item.details.name;
+                self.canvas.create_text(5 + 105 * curr_num, 25 + 15 * item_counter, text = name, anchor = tk.W,
+                                        font = ("Calibri", 8));
+                item_counter += 1;
+
+
 
         # Playing with interface buttons
         if self.fuck_button_pressed is True:

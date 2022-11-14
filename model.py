@@ -9,6 +9,9 @@
         - None for now
 
 
+    Status:
+        - beginning implementation of bill object
+
     Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
     Submission date: November 24th, 2022
 
@@ -69,7 +72,7 @@ class Table:
         <location> argument refers to the location the Table object is to placed on the canvas. """
         self.n_seats = seats
         self.location = location
-        self.orders = [Order() for _ in range(seats)]
+        self.orders = [Order(seat_number) for seat_number in range(seats)]
 
 
     def has_any_active_orders(self):
@@ -93,16 +96,32 @@ class Table:
         return self.orders[seat]
 
 
+
+    # Added method
+    def return_orders(self):
+        """ Returns the list of all the orders placed (and not placed) with the table. """
+        return self.orders;
+
+
 class Order:
 
-    def __init__(self):
+    def __init__(self, seat_number):        # <--- Added new argument
         """ Constructor for Order object.
 
         In short, this object is responsible for keeping track of the orders placed by a given
         seat in the restaurant.
 
         Every chair gets their own Order object associated with it. """
+
         self.items = []
+
+        # Adding a seat number attribute to the order to track which seat made the order
+        self.__seat_number = seat_number;
+
+
+    def get_seat_number(self):
+        """ Returns seat number associated of this Order object. """
+        return self.__seat_number;
 
     def add_item(self, menu_item):
         """ Function simply adds the OrderItem object <menu_item> passed through
@@ -208,6 +227,29 @@ class MenuItem:
         price of the menu item to <price>. """
         self.name = name
         self.price = price
+
+
+
+# -------- Added Code ---------
+
+class Bill:
+
+    # Okay, we need the bill object to have access to the seats of the table, and in truth the table itself
+
+    def __init__(self, table):
+
+        self.table = table;
+
+        # Let's get the orders of the seats in the table - todo: implement the unnasigned seat status
+        self.seat_orders = table.return_orders();
+
+        # continue after adding the seats to the payment view
+
+        pass;
+
+    pass;
+
+
 
 
 

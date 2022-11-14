@@ -76,9 +76,6 @@ class TableController(Controller):
 
     def make_bills(self, printer):
 
-        # TODO: switch to appropriate controller & UI so server can create and print bills
-        # for this table. The following line illustrates how bill printing works, but the
-        # actual printing should happen in the (new) controller, not here.
 
         # Switching the payment controller of the bill pressed
         this_control = PaymentController(self.view, self.restaurant, self.table);
@@ -162,8 +159,8 @@ class PaymentController(Controller):
 
 
     def create_ui(self):
-        """ Legit creates ui back in the view. """
-        self.view.create_payment_ui();
+        """ Legit creates the payment ui of the table selected. """
+        self.view.create_payment_ui(self.table);
 
 
     def fuck_around_button_pressed(self):
