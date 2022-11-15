@@ -24,9 +24,9 @@
                 - Creating the bill object
 
     To do list:
-        - Refactor the seat drawing code.
         - Implement the bill object
-            -
+            - Finish writing its class - implement its paid/unpaid status.
+            - Implement into the view.
 
 
 
@@ -307,26 +307,33 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
     <order_interval : int> : the distance the order items are to be drawn vertically from each other.
     """
 
-    # Unpacking coordinates from anchors
-    x_cood = anchor[0];
-    y_cood = anchor[1];
-    x_order = order_anchor[0];
-    y_order = order_anchor[1];
+    # WE WANT TO DRAW OUT A SEAT IF IT HAS ORDER ITEMS MADE WITH IT
+    if len(seat_order.items) > 0:
 
-    # Getting the seat number
-    seat_num = seat_order.get_seat_number();
+        # Unpacking coordinates from anchors
+        x_cood = anchor[0];
+        y_cood = anchor[1];
+        x_order = order_anchor[0];
+        y_order = order_anchor[1];
 
-    # First, draw out the seat number onto the canvas
-    canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER)
+        # Getting the seat number
+        seat_num = seat_order.get_seat_number();
 
-    # Dummy counter to draw order items on different lines.
-    item_counter = 1;
+        # First, draw out the seat number onto the canvas
+        canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER)
 
-    for this_item in seat_order.items:
-        name = this_item.details.name;
-        canvas.create_text(x_order + interval * seat_num, y_order + order_interval * item_counter, text=name,
-                                anchor=tk.W, font=("Calibri", 8));
-        item_counter += 1;
+        # Print out status for now #todo - replace with color
+        canvas.create_text(x_cood + interval * seat_num, y_cood - 10, text = seat_order.get_status(),
+                           anchor = tk.CENTER, font = ("Times", 6));
+
+        # Dummy counter to draw order items on different lines.
+        item_counter = 1;
+
+        for this_item in seat_order.items:
+            name = this_item.details.name;
+            canvas.create_text(x_order + interval * seat_num, y_order + order_interval * item_counter, text=name,
+                                    anchor=tk.W, font=("Calibri", 8));
+            item_counter += 1;
 
 
 

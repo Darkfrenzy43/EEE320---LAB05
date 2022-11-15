@@ -29,16 +29,24 @@ from constants import TABLES, MENU_ITEMS
 
 # ------ Defining Enumerated Constants ------
 
-class Status(enum.IntEnum):
+class OrderStatus(enum.IntEnum):
     """ Enumerated constants of type enum.IntEnum with linear values that track the state of a given order
-    item when placed within the KitchenView window. See oorms.py/Notes 4 for an in depth explanation.
-    With IntEnum, can use int(Status.this_status) to retrieve the value of a given Status enum constant. """
+    item when placed within the KitchenView window. """
 
     REQUESTED = -1; # damn, there ain't no elegant way to write this out xD
     PLACED = 0;
     COOKED = 1;
     READY = 2;
     SERVED = 3;
+
+class PaymentStatus(enum.IntEnum):
+    """ Enumerated constants of type enu.intenum with linear values that track the state of a given seat
+    order within the Payment UI and whether if it's been unassigned to a bill, assigned, or been paid off. """
+
+    UNASSIGNED = 0;
+    ASSIGNED = 1;
+    PAID = 2;
+
 
 
 class Restaurant:
@@ -118,10 +126,23 @@ class Order:
         # Adding a seat number attribute to the order to track which seat made the order
         self.__seat_number = seat_number;
 
+        # Adding a status to the seat's order for the payment UI. Default to unassigned.
+        self.__status = PaymentStatus.UNASSIGNED;
+
+
+
+    def advance_status(self):
+        """ Method advances current status of current seat order (UNASSIGNED --> ASSIGNED --> PAID). """
+        self.__status = PaymentStatus(int(self.__status) + 1);
+
+    def get_status(self):
+        """ Method returns current status of given seat order. """
+        return self.__status;
 
     def get_seat_number(self):
         """ Returns seat number associated of this Order object. """
         return self.__seat_number;
+
 
     def add_item(self, menu_item):
         """ Function simply adds the OrderItem object <menu_item> passed through
@@ -167,7 +188,7 @@ class OrderItem:
 
         # Setting initial status of instantiated OrderItem to REQUESTED.
         # Refer to oorms.py/Notes 4 for an in depth explanation on status functionality.
-        self.status = Status.REQUESTED;
+        self.status = OrderStatus.REQUESTED;
 
         # Setting __ordered attribute and details of OrderItem
         self.__ordered = False
@@ -191,14 +212,14 @@ class OrderItem:
 
     def has_been_served(self):
         """ I'm guessing we have this return True if this OrderItem object's current status is SERVED. """
-        return self.status == Status.SERVED;
+        return self.status == OrderStatus.SERVED;
 
 
     def can_be_cancelled(self):
         """ Return true if current OrderItem can be cancelled - if status is REQUESTED or PLACED. False otherwise. """
 
         # Return true if current status' value is less than or equal to PLACED's value
-        return int(self.status) <= int(Status.PLACED);
+        return int(self.status) <= int(OrderStatus.PLACED);
 
 
     def advance_status(self):
@@ -207,7 +228,7 @@ class OrderItem:
         # Knowing that int(self.status) returns the certain enumerated value to whatever constant self.status is
         # currently set to, and that Status(this_int) returns the enumerated constant in the Status() class which
         # has the value of this_int, we can use the two to elegantly advance the OrderItem's status. Pretty neat, eh.
-        self.status = Status(int(self.status) + 1);
+        self.status = OrderStatus(int(self.status) + 1);
 
 
     def get_status(self):
@@ -238,18 +259,30 @@ class Bill:
 
     def __init__(self, table):
 
+        # Save table as attribute
         self.table = table;
 
-        # Let's get the orders of the seats in the table - todo: implement the unnasigned seat status
-        self.seat_orders = table.return_orders();
+        # Get the seat orders and their statuses
+        self.table_orders = table.return_orders();
 
-        # continue after adding the seats to the payment view
+        # Create an array of orders added to this bill
+        self.added_orders = [];
 
+        # Implement PAID and UNPAID status
+
+
+    def delete(self):
+        """ Method deletes this bill object if is not paid off. Sets all the added orders to unassigned status. """
         pass;
 
-    pass;
+    def pay_off(self):
+        """ Method sets the payment status to PAID of this bill.
+        Subsequently sets all the associateds seats to paid status"""
+        pass;
 
-
+    def add_order(self, this_seat_order):
+        """ Method adds a seat order at the table to this bill object. Only possible when status is unpaid.  """
+        pass;
 
 
 
