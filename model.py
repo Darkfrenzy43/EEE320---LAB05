@@ -46,6 +46,8 @@ class PaymentStatus(enum.IntEnum):
     UNASSIGNED = 0;
     ASSIGNED = 1;
     PAID = 2;
+    
+    REMOVED = 3;
 
 
 
@@ -262,27 +264,53 @@ class Bill:
         # Save table as attribute
         self.table = table;
 
-        # Get the seat orders and their statuses
+        # Get the seat orders and their statuses for the "right window" of the UI
         self.table_orders = table.return_orders();
 
         # Create an array of orders added to this bill
         self.added_orders = [];
 
-        # Implement PAID and UNPAID status
+        # Intialize status to unassigned. 
+        self.__status = PaymentStatus.UNASSIGNED;
+
+    def set_assigned(self):
+        """ Method sets __status of bill object to ASSIGNED, only if current __status is UNASSIGNED. """
+        if self.__status is PaymentStatus.UNASSIGNED:
+            self.__status = PaymentStatus.ASSIGNED;
+        else: 
+            print(f"\nCurrent __status of bill can't be switched from {self.__status} to ASSIGNED.");
 
 
-    def delete(self):
-        """ Method deletes this bill object if is not paid off. Sets all the added orders to unassigned status. """
-        pass;
+    def set_paid(self):
+        """ Method sets __status of bill object to ASSIGNED, only if current __status is UNASSIGNED. """
+        if self.__status is PaymentStatus.ASSIGNED:
+            self.__status = PaymentStatus.PAID;
+        else: 
+            print(f"\nCurrent __status of bill can't be switched from {self.__status} to PAID. ");
 
-    def pay_off(self):
-        """ Method sets the payment status to PAID of this bill.
-        Subsequently sets all the associateds seats to paid status"""
-        pass;
 
     def add_order(self, this_seat_order):
-        """ Method adds a seat order at the table to this bill object. Only possible when status is unpaid.  """
-        pass;
+        """ Method adds a seat order at the table to this bill object. Only possible when __status is unpaid.  """
+        
+        # Add to order only if it's __status is UNASSIGNED
+        if this_seat_order.__status == PaymentStatus.UNASSIGNED:
+            # todo - sort this in terms of seat number?
+            self.added_orders.append(this_seat_order);
+        else:
+            print(f"\nCannot add order {this_seat_order.details.name} "
+                  f"to order since is off __status {this_seat_order.__status}.")
+    
+    
+    def delete(self):
+        """ Method deletes this bill object if is not paid off. Sets all the added orders to unassigned __status. """
+        for this_order in self.added_orders:
+            this_order.__status = PaymentStatus.UNASSIGNED
+    
+        # Do removal from view somewhere here...
+        self.__status = PaymentStatus.REMOVED;
+
+        # todo - figure out how to destroy the object from the program.
+    
 
 
 

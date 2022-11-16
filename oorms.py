@@ -25,7 +25,6 @@
 
     To do list:
         - Implement the bill object
-            - Finish writing its class - implement its paid/unpaid status.
             - Implement into the view.
 
 
@@ -248,9 +247,6 @@ class ServerView(RestaurantView):
 
     # ----- PAYMENT UI CODE -------
 
-
-
-
     def create_payment_ui(self, table):
         """ This shit creates the payment ui that we have in our UI concept design idk.
 
@@ -274,6 +270,8 @@ class ServerView(RestaurantView):
 
         # Create an exit button that returns back to table view
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
+
+        # Draw button that creates a bill object. 
 
 
 
