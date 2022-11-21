@@ -43,6 +43,8 @@ class PaymentStatus(enum.IntEnum):
     """ Enumerated constants of type enu.intenum with linear values that track the state of a given seat
     order within the Payment UI and whether if it's been unassigned to a bill, assigned, or been paid off. """
 
+    NO_ITEMS = -1; # This one was added
+
     UNASSIGNED = 0;
     ASSIGNED = 1;
     PAID = 2;
@@ -85,7 +87,6 @@ class Table:
         self.location = location
         self.orders = [Order(seat_number) for seat_number in range(seats)]
 
-
         # Create a list of all the bill objects made with the table
         self._bills = [];
 
@@ -95,10 +96,15 @@ class Table:
 
     def add_bill(self):
         """ Method adds a Bill Object to this Table object. Incrementing self.bill_counter whenever a bill is made.
-        Can only create as many bills objects as there are seats who made orders at the table. """
+        Can only create as many bills objects as there are seats who have made orders at the table. """
 
-        # todo - change to cap at number of seats who made orders.
-        if len(self._bills) < self.n_seats:
+        # Get number of active orders of table
+        order_count = 0;
+        for this_order in self.orders:
+            if len(this_order.items) > 0:
+                order_count += 1;
+
+        if len(self._bills) < order_count:
             self._bills.append(Bill(self, self.bill_counter));
             self.bill_counter += 1;
 
@@ -124,14 +130,17 @@ class Table:
         number <seat> has been passed through the arguments. """
         return self.orders[seat]
 
+    # ------ ADDED METHODS -----
 
-
-    # Added method
     def return_orders(self):
         """ Returns the list of all the orders placed (and not placed) with the table. """
         return self.orders;
 
-    # Added method
+    def return_unassigned_orders(self):
+        """ Returns a list of all the orders that are unassigned. """
+        return [this_order for this_order in self.orders if this_order.get_status() == PaymentStatus.UNASSIGNED];
+
+
     def return_bills(self):
         """ Returns the list of bill objects made with this table. """
         return self._bills;
@@ -152,14 +161,17 @@ class Order:
         # Adding a seat number attribute to the order to track which seat made the order
         self.__seat_number = seat_number;
 
-        # Adding a status to the seat's order for the payment UI. Default to unassigned.
-        self.__status = PaymentStatus.UNASSIGNED;
+        # Adding a status to the seat's order for the payment UI. Default to NO_ITEMS.
+        self.__status = PaymentStatus.NO_ITEMS;
 
 
 
     def advance_status(self):
         """ Method advances current status of current seat order (UNASSIGNED --> ASSIGNED --> PAID). """
-        self.__status = PaymentStatus(int(self.__status) + 1);
+        if int(self.__status) < int(PaymentStatus.PAID):
+            prev_status = self.__status;
+            self.__status = PaymentStatus(int(self.__status) + 1);
+            print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
 
     def get_status(self):
         """ Method returns current status of given seat order. """
@@ -172,9 +184,16 @@ class Order:
 
     def add_item(self, menu_item):
         """ Function simply adds the OrderItem object <menu_item> passed through
-        the arguments into the self.items list attribute of the Order object. """
+        the arguments into the self.items list attribute of the Order object.
+        If it's the first item added, advance status from NO_ITEM to UNASSIGNED. """
+
+        # Advancing status to UNASSIGNED if no items have been added to order yet
+        if len(self.items) == 0:
+            self.advance_status();
+
         item = OrderItem(menu_item)
         self.items.append(item)
+
 
     def remove_item(self, order_item):
         """ Function simply removes the <item> object passed through args from the self.items list"""
@@ -301,20 +320,13 @@ class Bill:
         self.ID = ID;
 
 
-    def set_assigned(self):
-        """ Method sets __status of bill object to ASSIGNED, only if current __status is UNASSIGNED. """
-        if self.__status is PaymentStatus.UNASSIGNED:
-            self.__status = PaymentStatus.ASSIGNED;
-        else: 
-            print(f"\nCurrent __status of bill can't be switched from {self.__status} to ASSIGNED.");
 
-
-    def set_paid(self):
-        """ Method sets __status of bill object to ASSIGNED, only if current __status is UNASSIGNED. """
-        if self.__status is PaymentStatus.ASSIGNED:
-            self.__status = PaymentStatus.PAID;
-        else: 
-            print(f"\nCurrent __status of bill can't be switched from {self.__status} to PAID. ");
+    def advance_status(self):
+        """ If the bill status is not at PAID, method advances the status of the object. """
+        if int(self.__status) < int(PaymentStatus.PAID):
+            prev_status = self.__status;
+            self.__status = PaymentStatus(int(self.__status) + 1);
+            print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
 
 
     def add_order(self, this_seat_order):

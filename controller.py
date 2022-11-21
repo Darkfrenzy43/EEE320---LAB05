@@ -169,6 +169,15 @@ class PaymentController(Controller):
 
         self.view.create_payment_ui(self.table);
 
+
+    def bill_object_pressed(self, bill_obj):
+        """ Handles the event when a bill object is pressed. Switches to bill controller to
+        opens the bill object's UI. """
+        this_controller = BillController(self.view, self.restaurant, self.table, bill_obj);
+        self.view.set_controller(this_controller);
+        self.view.update();
+
+
     def add_bill_pressed(self):
         """ Method adds a bill object of the associated table. Re-updates UI. """
         self.table.add_bill();
@@ -176,19 +185,9 @@ class PaymentController(Controller):
         print("\nCurrent have", len(self.table.return_bills()), "bill objects with this table.");
 
 
-    def fuck_around_button_pressed(self):
-        """ Legit the handler when fuck around button gets pressed. """
-
-        # do the fuck around shit
-        self.view.fuck_button_pressed = True;
-        self.view.update();
-
-
     def exit_pressed(self):
         """ Handler that exits Payment UI back to table view. """
 
-        # Turning off button
-        self.view.fuck_button_pressed = False;
 
         # switching controller
         this_control = TableController(self.view, self.restaurant, self.table);
@@ -200,9 +199,32 @@ class PaymentController(Controller):
 class BillController(Controller):
     """ Handles events from the Bill UI. """
 
+    def __init__(self, view, restaurant, table, this_bill):
+        """ Constructor of the Bill Controller. """
+        super().__init__(view, restaurant);
+
+        # Saving the bill object and the associated table through attributes
+        self.table = table; # I might not need this
+        self.this_bill = this_bill;
+
+
     def create_ui(self):
         """ legit creates ui back in the view. """
-        self.view.create_bill_ui();
+        self.view.create_bill_ui(self.this_bill);
 
 
-    # ...
+    def plus_button_pressed(self, seat_pressed):
+        """ Method adds the unassigned seat whose button was pressed to the current bill object whose
+        controller is currently set as the current one. """
+
+        # do shit with self.this_bill
+        print(f"\nThe seat with number {seat_pressed.get_seat_number()} was pressed.");
+
+    def exit_pressed(self):
+        """ Handler that exits Bill UI back to Payment UI. """
+
+        # switching controller
+        this_control = PaymentController(self.view, self.restaurant, self.table);
+        self.view.set_controller(this_control);
+        self.view.update()
+

@@ -56,11 +56,15 @@ FULL_SEAT_STYLE = {'fill': '#090', 'outline': '#090'}
 SERVER_VIEW_WIDTH = 380 # Changed for debugging
 SERVER_VIEW_HEIGHT = 500
 
+# ------------ ADDED CONSTANTS ------------
 PAYMENT_VIEW_WIDTH = 840;
 PAYMENT_VIEW_HEIGHT = 500;
 
-# BILL_VIEW_WIDTH =
-# BILL_VIEW_HEIGHT =
+BILL_VIEW_WIDTH = 1200;
+BILL_VIEW_HEIGHT = 500;
+
+
+# -----------------------------------------
 
 # Printer constants
 

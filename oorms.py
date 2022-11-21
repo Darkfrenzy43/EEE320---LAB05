@@ -24,11 +24,10 @@
                 - Creating the bill object
 
     To do list:
-        - Implement the bill object
-            - Implement handler and the cap for the number of buttons that can be created.
-            - Change to have max number of bills be max number of chairs with made orders
-            - Change color of bill objects to white, yellow, and green
         - Create Bill UI
+            - Finish drawing Bill UI
+            - Add the seat adding to bill mechanic
+            - Add delete bill mechanic
 
 
 
@@ -47,7 +46,7 @@ from abc import ABC
 
 from constants import *
 from controller import RestaurantController
-from model import Restaurant
+from model import Restaurant, PaymentStatus;
 
 
 # --- Defining Classes ---
@@ -273,7 +272,6 @@ class ServerView(RestaurantView):
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
 
 
-
         # Getting the seats and the bill objects
         seat_orders = table.return_orders();
         bill_objects = table.return_bills();
@@ -287,15 +285,128 @@ class ServerView(RestaurantView):
 
             def this_handler(_, this_bill = this_bill_object):
 
-                # Open the bill object's UI from here
+                ID = this_bill.ID;
+                print("\nBill that was touched has ID", ID);
 
-                pass;
+                self.controller.bill_object_pressed(this_bill);
 
             # Draw the bill object
             draw_bill_info_button(self.canvas, this_bill_object, (200, 200), 150, this_handler)
 
 
 
+    # Creating the Bill UI now
+    def create_bill_ui(self, bill_obj):
+        """ Method creates the bill UI of the <bill_obj> Bill object that is passed through the arguments. """
+
+        # First, configure window size
+        this_height = BILL_VIEW_HEIGHT;
+        this_width = BILL_VIEW_WIDTH;
+        self.canvas.config(width = this_width, height = this_height);
+
+        # Unpacking info on the bill object
+        curr_status = bill_obj.get_status();
+        bill_ID = bill_obj.ID;
+        table_orders = bill_obj.table_orders;
+        added_orders = bill_obj.added_orders;
+
+
+        # Delete everything on the canvas.
+        self.canvas.delete(tk.ALL);
+
+        # --- Drawing out the UI layout ---
+
+        # Drawing divider
+        self.canvas.create_line(700, 0, 700, this_height, width = 2);
+
+        # Drawing Titles
+        self.canvas.create_text(350, 40, text = f'Bill #{bill_ID}', anchor = tk.CENTER,
+                                font = ('Times', 25, 'underline'));
+        self.canvas.create_text(950, 30, text = 'Unassigned Seats', anchor = tk.CENTER,
+                                font = ('Times', 18, 'underline'));
+
+        # Draw added orders
+
+        # Draw total price of added orders
+
+        # Draw unassigned orders and their buttons in right window
+        unassigned_list = bill_obj.table.return_unassigned_orders();
+        for unass_seat in unassigned_list:
+
+            # Creating handler when unassigned seat arrow button touched
+            def seat_handler(_, this_seat = unass_seat):
+
+                # Add the unassigned seat if it was pressed to the bill
+                self.controller.plus_button_pressed(this_seat);
+
+
+            draw_unassigned_info_button(self.canvas, unass_seat, (775, 75), 110, seat_handler,
+                                        unassigned_list.index(unass_seat));
+
+        # Draw pay button
+
+        # Create an exit button that returns back to Payment UI
+        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
+
+
+
+def draw_unassigned_info_button(canvas, unass_seat, anchor, interval, handler, index):
+    """ For the BILL UI - function draws the text and button for the unassigned seat objects in right window.
+
+    <<canvas : tk.Canvas> : the canvas of which the UI is being drawn on
+    <unass_seat : Order> : the Order object of the unassigned seat which is to be drawn
+    <anchor : (int, int)> : the coordinates of the first Order object of the UI being drawn. The remaining
+        Order objects are to be positioned in relation to the first one.
+    <interval: int> : the distance the Bill objects are to be drawn from each other (vertically).
+    <handler: function> : the handler that is binded to the pressing of their button.
+    <index: int> : the index the passed in unass_seat is within the unassigned_list. """
+
+    # Retrieving order info
+    x_cood, y_cood = anchor;
+    seat_num = unass_seat.get_seat_number();
+    order_items = unass_seat.items;
+
+    # Drawing out the seat heading
+    offset = 0;
+    if index > 3:
+        offset = 250;
+        index -= 4;
+
+    canvas.create_text(x_cood + offset, y_cood + interval * index, text = f'Seat #{seat_num}', anchor = tk.CENTER,
+                       font = ("Helvetica", 13, "underline"));
+
+    # Position the seat's ordered items in relation to their respective seat heading.
+    item_counter = 0;
+    for this_item in order_items:
+
+        # Base case this - if more than 5 lines already printed, don't print anymore
+        if item_counter > 4:
+            break;
+
+        if item_counter > 3:
+            name = "...";
+        else:
+            name = this_item.details.name;
+                                    # Move 30 to left to align              # Change into order_interval var
+        canvas.create_text(x_cood + offset - 30, (y_cood + interval * index) + 20 + (item_counter * 15), text = name,
+                           anchor = tk.W, font = ("Calibri", 8));
+
+        item_counter += 1;
+
+
+    # Drawing the button associated with the unassigned seat (add vars where you feel is needed)
+    box_style = {'fill' : '#090'}
+    button = canvas.create_rectangle((x_cood + offset) - 53, (y_cood + interval * index) - 8, (x_cood + offset) - 37,
+                                     (y_cood + interval * index) + 8, **box_style);
+    plus_vert_line = canvas.create_line((x_cood + offset) - 44, (y_cood + interval * index) - 5, (x_cood + offset) - 44,
+                       (y_cood + interval * index) + 5, width = 2, fill = '#fff');
+    plus_hori_line = canvas.create_line((x_cood + offset) - 49, (y_cood + interval * index), (x_cood + offset) - 39,
+                                        (y_cood + interval * index), width = 2, fill = '#fff');
+
+    # Tag binding the button's elements
+    canvas.tag_bind(button, '<Button-1>', handler);
+    canvas.tag_bind(plus_vert_line, '<Button-1>', handler);
+    canvas.tag_bind(plus_hori_line, '<Button-1>', handler);
 
 
 def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in rect_style option here and vert_interval?
@@ -305,7 +416,7 @@ def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in
     <bill_obj : Bill> : the bill object that is being drawn.
     <anchor : (int, int)> : the coordinates of the first bill object of the UI being drawn. The remaining
         bill objects are to be positioned in relation to the first one.
-    <interval: int> : the distance the Bill objects are to be drawn from each other (from their left corners).
+    <interval: int> : the distance the Bill objects are to be drawn from each other .
     <handler: function> : the handler that is binded to the pressing of this button. """
 
     # Retrieving bill info
@@ -320,8 +431,21 @@ def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in
     half_width = 50;
     half_height = 30;
 
-    # Create temp dictionary for the button styles
-    box_style = {'fill' : '#090', 'outline': '#090'};
+    # Colours in TKinter: (red, yellow, blue)
+        # #fff -> white
+        # #999 -> Gray
+        # #000 -> Black
+        # #900 -> Dark Red
+        # #f00 -> Red
+        # #990 -> Dark Yellow
+        # #0f0 -> Bright Green
+        # #090 -> Green
+        # #00f -> Bright Blue
+
+    # Determining colour based on status of bill object
+    curr_status_val = int(bill_obj.get_status());
+    box_colours = ['#fff', '#ff0', '#090'];         # <-- White -> Yellow -> Green
+    box_style = {'fill': box_colours[curr_status_val], 'outline': '#000'};
 
 
     box, label = None, None;
@@ -371,6 +495,16 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
         # Getting the seat number
         seat_num = seat_order.get_seat_number();
 
+        width = 55;
+        height = 120;
+
+        # Drawing the box of the seat object (extends above the window. Yes, we want that)
+        curr_status_val = int(seat_order.get_status());
+        box_colours = ['#fff', '#ff0', '#090'];  # <-- White -> Yellow -> Green
+        box_style = {'fill': box_colours[curr_status_val], 'outline': '#000'};
+        box = canvas.create_rectangle((x_cood + interval * seat_num) - width, y_cood - height,
+                                      (x_cood + interval * seat_num) + width, y_cood + height, **box_style);
+
         # First, draw out the seat number onto the canvas
         canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER)
 
@@ -381,11 +515,24 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
         # Dummy counter to draw order items on different lines.
         item_counter = 1;
 
-        for this_item in seat_order.items:
-            name = this_item.details.name;
-            canvas.create_text(x_order + interval * seat_num, y_order + order_interval * item_counter, text=name,
+        for this_item in seat_order.items: # shift over left slightly
+
+            # If there are more than 6 items, have the 7th item be "...", and print no more items
+            if item_counter > 6:
+                name = "...";
+            else:
+                name = this_item.details.name;
+
+            canvas.create_text(x_order + interval * seat_num - 5, y_order + order_interval * item_counter, text=name,
                                     anchor=tk.W, font=("Calibri", 8));
             item_counter += 1;
+
+            # As soon as we hit 7 items, stop printing the items (stop function) (find better way)
+            if item_counter > 7:
+                return;
+
+
+
 
 
 
