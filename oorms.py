@@ -25,7 +25,10 @@
 
     To do list:
         - Implement the bill object
-            - Implement into the view.
+            - Implement handler and the cap for the number of buttons that can be created.
+            - Change to have max number of bills be max number of chairs with made orders
+            - Change color of bill objects to white, yellow, and green
+        - Create Bill UI
 
 
 
@@ -252,7 +255,7 @@ class ServerView(RestaurantView):
 
         <table> is the table whose payment UI is being accessed. """
 
-
+        # Retrieving constant information.
         this_width = PAYMENT_VIEW_WIDTH;
         this_height = PAYMENT_VIEW_HEIGHT;
 
@@ -261,34 +264,87 @@ class ServerView(RestaurantView):
         self.canvas.delete(tk.ALL);
 
 
+        # Draw button that creates a bill object.
+        self.make_button('Create Bill.', lambda event: self.controller.add_bill_pressed(), location =
+            (200, this_height - 40));
 
-
-        # Let's try creating some buttons and stuff (fuck around i guess)
-        self.canvas.create_text(this_width/2, this_height/2, text = "I fucking love coding.", anchor = tk.CENTER);
-        self.make_button('Click me. Do it.', lambda event: self.controller.fuck_around_button_pressed(), location =
-            (this_width/2 - 50, this_height/2 + 20));
 
         # Create an exit button that returns back to table view
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
 
-        # Draw button that creates a bill object. 
 
 
-
-        # Getting the seats.
+        # Getting the seats and the bill objects
         seat_orders = table.return_orders();
+        bill_objects = table.return_bills();
 
         # Drawing the seats and their orders above (maybe change this to have the loop happen in the function?)
         for this_order in seat_orders:
             draw_seat_info(self.canvas, this_order, (50, 20), (5, 25), 105, 15);
 
+        # Loop through all the bills in this table
+        for this_bill_object in bill_objects:
 
-        # Playing with interface buttons
-        if self.fuck_button_pressed is True:
+            def this_handler(_, this_bill = this_bill_object):
 
-            self.canvas.create_text(this_width / 2, this_height / 2 + 100,
-                                    text = "\"Velasco, what are you saying? I've literally never said that though.\" "
-                                           "\n-Eric Cho (based)", anchor = tk.CENTER);
+                # Open the bill object's UI from here
+
+                pass;
+
+            # Draw the bill object
+            draw_bill_info_button(self.canvas, this_bill_object, (200, 200), 150, this_handler)
+
+
+
+
+
+def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in rect_style option here and vert_interval?
+    """ For the PAYMENT UI - function draws the text (not the button!) each bill object.
+
+    <canvas : tk.Canvas> : the canvas of which the UI is being drawn on
+    <bill_obj : Bill> : the bill object that is being drawn.
+    <anchor : (int, int)> : the coordinates of the first bill object of the UI being drawn. The remaining
+        bill objects are to be positioned in relation to the first one.
+    <interval: int> : the distance the Bill objects are to be drawn from each other (from their left corners).
+    <handler: function> : the handler that is binded to the pressing of this button. """
+
+    # Retrieving bill info
+    orders = bill_obj.added_orders; # Encapsulate these two?
+    ID = bill_obj.ID;
+    status = bill_obj.get_status();
+
+    # Unpacking coordinates
+    x_cood, y_cood = anchor;
+
+    # Setting up box length (put in constants?)
+    half_width = 50;
+    half_height = 30;
+
+    # Create temp dictionary for the button styles
+    box_style = {'fill' : '#090', 'outline': '#090'};
+
+
+    box, label = None, None;
+    # Draw the buttons on two rows (refactor this for real)
+    if ID < 4:
+        box = canvas.create_rectangle(x_cood + interval * ID - half_width, y_cood - half_height,
+                                      (x_cood + interval * ID) + half_width, y_cood + half_height, **box_style);
+        label = canvas.create_text(x_cood + interval * ID, y_cood, text = f'Bill #{ID}', anchor = tk.CENTER,
+                                   font = ("Calibri", 15));
+    else:
+        box = canvas.create_rectangle(x_cood + interval * (ID - 4) - half_width, y_cood + interval - half_height,
+                                      (x_cood + interval * (ID - 4)) + half_width, y_cood + half_height + interval,
+                                      **box_style);
+        label = canvas.create_text(x_cood + interval * (ID - 4), y_cood + interval, text = f'Bill #{ID}',
+                                   anchor = tk.CENTER, font = ("Calibri", 15))
+
+    # Tag binding the passed in handler to this button
+    canvas.tag_bind(box, '<Button-1>', handler);
+    canvas.tag_bind(label, '<Button-1>', handler);
+
+
+
+
 
 
 def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_interval):
@@ -309,10 +365,8 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
     if len(seat_order.items) > 0:
 
         # Unpacking coordinates from anchors
-        x_cood = anchor[0];
-        y_cood = anchor[1];
-        x_order = order_anchor[0];
-        y_order = order_anchor[1];
+        x_cood, y_cood = anchor;
+        x_order, y_order = order_anchor;
 
         # Getting the seat number
         seat_num = seat_order.get_seat_number();

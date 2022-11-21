@@ -63,6 +63,7 @@ class Restaurant:
         self.menu_items = [MenuItem(name, price) for name, price in MENU_ITEMS]
         self.views = []
 
+
     def add_view(self, view):
         """ Method adds the RestaurantView object <view> passed through args into the self.views list attribute """
         self.views.append(view)
@@ -83,6 +84,24 @@ class Table:
         self.n_seats = seats
         self.location = location
         self.orders = [Order(seat_number) for seat_number in range(seats)]
+
+
+        # Create a list of all the bill objects made with the table
+        self._bills = [];
+
+        # Create a bill counter to assign appropriate IDs of bills created with this table
+        self.bill_counter = 0;
+
+
+    def add_bill(self):
+        """ Method adds a Bill Object to this Table object. Incrementing self.bill_counter whenever a bill is made.
+        Can only create as many bills objects as there are seats who made orders at the table. """
+
+        # todo - change to cap at number of seats who made orders.
+        if len(self._bills) < self.n_seats:
+            self._bills.append(Bill(self, self.bill_counter));
+            self.bill_counter += 1;
+
 
 
     def has_any_active_orders(self):
@@ -111,6 +130,11 @@ class Table:
     def return_orders(self):
         """ Returns the list of all the orders placed (and not placed) with the table. """
         return self.orders;
+
+    # Added method
+    def return_bills(self):
+        """ Returns the list of bill objects made with this table. """
+        return self._bills;
 
 
 class Order:
@@ -257,9 +281,9 @@ class MenuItem:
 
 class Bill:
 
-    # Okay, we need the bill object to have access to the seats of the table, and in truth the table itself
 
-    def __init__(self, table):
+
+    def __init__(self, table : Table, ID : int):
 
         # Save table as attribute
         self.table = table;
@@ -272,6 +296,10 @@ class Bill:
 
         # Intialize status to unassigned. 
         self.__status = PaymentStatus.UNASSIGNED;
+
+        # Creating the ID of the bill
+        self.ID = ID;
+
 
     def set_assigned(self):
         """ Method sets __status of bill object to ASSIGNED, only if current __status is UNASSIGNED. """
@@ -310,7 +338,11 @@ class Bill:
         self.__status = PaymentStatus.REMOVED;
 
         # todo - figure out how to destroy the object from the program.
-    
+
+
+    def get_status(self):
+        """ Method returns current status of bill. """
+        return self.__status;
 
 
 

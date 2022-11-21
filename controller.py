@@ -15,7 +15,8 @@
 
 """
 
-
+# Is this the right spot for this?
+from model import Bill
 
 
 class Controller:
@@ -160,7 +161,19 @@ class PaymentController(Controller):
 
     def create_ui(self):
         """ Legit creates the payment ui of the table selected. """
+
+        # Add a Bill Object to the table if there is none before.
+        if len(self.table.return_bills()) == 0:
+            self.table.add_bill();
+
+
         self.view.create_payment_ui(self.table);
+
+    def add_bill_pressed(self):
+        """ Method adds a bill object of the associated table. Re-updates UI. """
+        self.table.add_bill();
+        self.create_ui();
+        print("\nCurrent have", len(self.table.return_bills()), "bill objects with this table.");
 
 
     def fuck_around_button_pressed(self):
