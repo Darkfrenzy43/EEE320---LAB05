@@ -16,7 +16,7 @@
 """
 
 # Is this the right spot for this?
-from model import Bill
+from model import PaymentStatus; # <-- May end up removing if move applicable code to model.py
 
 
 class Controller:
@@ -173,6 +173,7 @@ class PaymentController(Controller):
     def bill_object_pressed(self, bill_obj):
         """ Handles the event when a bill object is pressed. Switches to bill controller to
         opens the bill object's UI. """
+
         this_controller = BillController(self.view, self.restaurant, self.table, bill_obj);
         self.view.set_controller(this_controller);
         self.view.update();
@@ -212,13 +213,58 @@ class BillController(Controller):
         """ legit creates ui back in the view. """
         self.view.create_bill_ui(self.this_bill);
 
+    def pay_bill(self):
+        """ Method sets the current bill to paid status, and all of the added seats to paid status too. """
 
-    def plus_button_pressed(self, seat_pressed):
+        # Can only pay off the bill if it has any added_orders in it. If not, print error message and stop function.
+        if len(self.this_bill.added_orders) == 0:
+            print("\nERROR: Can't pay off a bill if there are no added orders.");
+            return;
+
+        # Loop through bills added seat orders, advance their status to PAID. #todo move this in to the model.py?
+        for this_order in self.this_bill.added_orders:
+            this_order.advance_status();
+
+        # Set this bill's status to paid
+        self.this_bill.set_paid();
+
+        # Re-update the UI
+        self.create_ui();
+
+    def delete_bill(self):
+        """ Method deletes the current bill by first setting all of its added orders to UNASSIGNED, and
+        then removing the bill from the list of the table's bills. """
+
+        # Can only delete bill if it's status is not PAID. If it is, throw a print message error.
+        # todo move into model? for weak coupling
+        if self.this_bill.get_status() == PaymentStatus.PAID:
+            print("\nERROR: Can not delete a paid bill lmao wut r u doing.");
+            return;
+
+        # Check if this is the last bill. If it is, it can't be deleted.
+        if len(self.table.return_bills()) == 1:
+            print("\nERROR: Can't delete all the bills. Must always have minimum of 1 at all times.");
+            return;
+
+        # Loop through the bill's added orders, and set unassigned
+        for this_order in self.this_bill.added_orders:
+            this_order.set_unassigned();
+
+        # Switch the controller back to the Payment UI, and delete the bill
+        self.this_bill.delete();
+        self.exit_pressed();
+
+        # Print statement
+        print(self.table.return_bills());
+
+
+
+    def add_order_pressed(self, seat_order_pressed):
         """ Method adds the unassigned seat whose button was pressed to the current bill object whose
-        controller is currently set as the current one. """
+        controller is currently set as the current one. Re-updates UI after adding.  """
 
-        # do shit with self.this_bill
-        print(f"\nThe seat with number {seat_pressed.get_seat_number()} was pressed.");
+        self.this_bill.add_order(seat_order_pressed)
+        self.create_ui();
 
     def exit_pressed(self):
         """ Handler that exits Bill UI back to Payment UI. """

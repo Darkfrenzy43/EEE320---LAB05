@@ -107,8 +107,14 @@ class Table:
         if len(self._bills) < order_count:
             self._bills.append(Bill(self, self.bill_counter));
             self.bill_counter += 1;
+        # Print if user is trying to add more than allowed bills
+        else:
+            print("\nERROR: Can only add as many bills as there are seats who've made orders.");
 
+    def remove_bill(self, to_remove):
+        """ Method removes a bill in the self._bills list. There will always be this added bill in there. """
 
+        self._bills.remove(to_remove);
 
     def has_any_active_orders(self):
         """ Returns True if there are still active orders pending that have not been served.
@@ -172,6 +178,10 @@ class Order:
             prev_status = self.__status;
             self.__status = PaymentStatus(int(self.__status) + 1);
             print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
+
+    def set_unassigned(self):
+        """ Method sets the status of the this order object to UNASSIGNED since its bill is being deleted. """
+        self.__status = PaymentStatus.UNASSIGNED;
 
     def get_status(self):
         """ Method returns current status of given seat order. """
@@ -319,23 +329,35 @@ class Bill:
         # Creating the ID of the bill
         self.ID = ID;
 
+    def __del__(self):
+        self.table.remove_bill(self);
+        print(f"\nThis Bill object was deleted from table {self.table}.");
 
 
-    def advance_status(self):
-        """ If the bill status is not at PAID, method advances the status of the object. """
-        if int(self.__status) < int(PaymentStatus.PAID):
-            prev_status = self.__status;
-            self.__status = PaymentStatus(int(self.__status) + 1);
-            print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
+    def set_paid(self):
+        """ Sets the bill status to be PaymentStatus.PAID. """
+
+        # Printing if user is trying to set a bill status that is already PAID to PAID again lmao
+        if self.__status == PaymentStatus.PAID:
+            print("\nERROR: This bill has already been paid.");
+            return;
+
+        # Otherwise, set the status as needed.
+        self.__status = PaymentStatus.PAID;
 
 
     def add_order(self, this_seat_order):
         """ Method adds a seat order at the table to this bill object. Only possible when __status is unpaid.  """
         
         # Add to order only if it's __status is UNASSIGNED
-        if this_seat_order.__status == PaymentStatus.UNASSIGNED:
+        if this_seat_order.get_status() == PaymentStatus.UNASSIGNED:
+
+            # Advance status of the order object
+            this_seat_order.advance_status();
+
             # todo - sort this in terms of seat number?
             self.added_orders.append(this_seat_order);
+
         else:
             print(f"\nCannot add order {this_seat_order.details.name} "
                   f"to order since is off __status {this_seat_order.__status}.")
@@ -343,13 +365,14 @@ class Bill:
     
     def delete(self):
         """ Method deletes this bill object if is not paid off. Sets all the added orders to unassigned __status. """
+
+        """
         for this_order in self.added_orders:
             this_order.__status = PaymentStatus.UNASSIGNED
+        """
     
         # Do removal from view somewhere here...
-        self.__status = PaymentStatus.REMOVED;
-
-        # todo - figure out how to destroy the object from the program.
+        self.__del__();
 
 
     def get_status(self):

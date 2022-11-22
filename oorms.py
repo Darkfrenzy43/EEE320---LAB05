@@ -25,9 +25,10 @@
 
     To do list:
         - Create Bill UI
-            - Finish drawing Bill UI
-            - Add the seat adding to bill mechanic
-            - Add delete bill mechanic
+            - Make a separate bill status to make it more organized.
+            - Fix adding bills after deleting a bill
+            - Make everything look pretty and clean up the fucking code before moving onto tape bill
+
 
 
 
@@ -284,10 +285,6 @@ class ServerView(RestaurantView):
         for this_bill_object in bill_objects:
 
             def this_handler(_, this_bill = this_bill_object):
-
-                ID = this_bill.ID;
-                print("\nBill that was touched has ID", ID);
-
                 self.controller.bill_object_pressed(this_bill);
 
             # Draw the bill object
@@ -319,15 +316,29 @@ class ServerView(RestaurantView):
         # Drawing divider
         self.canvas.create_line(700, 0, 700, this_height, width = 2);
 
+        # Drawing PAID status
+        if bill_obj.get_status() == PaymentStatus.PAID:
+            self.canvas.create_text(350, 150, text = f'PAID', anchor = tk.CENTER, font = ('Times', 30), fill = '#090');
+
         # Drawing Titles
-        self.canvas.create_text(350, 40, text = f'Bill #{bill_ID}', anchor = tk.CENTER,
+        self.canvas.create_text(350, 70, text = f'Bill #{bill_ID}', anchor = tk.CENTER,
                                 font = ('Times', 25, 'underline'));
         self.canvas.create_text(950, 30, text = 'Unassigned Seats', anchor = tk.CENTER,
                                 font = ('Times', 18, 'underline'));
 
-        # Draw added orders
+        # Draw orders added to this bill object.
+        self.canvas.create_text(150, 205, text = f'Added Seats', anchor = tk.CENTER, font = ('Times', 18, 'underline'));
+        added_orders = [str(order.get_seat_number()) for order in bill_obj.added_orders];
+        added_orders.sort(); # yup, we're sorting it
+        self.canvas.create_text(150, 230, text = ', '.join(added_orders), anchor = tk.CENTER, font = ('Times', 16));
 
         # Draw total price of added orders
+        total_price = 0;
+        for this_order in bill_obj.added_orders:
+            total_price += this_order.total_cost();
+        self.canvas.create_text(550, 205, text = "Total Price", anchor = tk.CENTER, font = ('Times', 18, 'underline'));
+        self.canvas.create_text(550, 230, text = '$%.2f' % total_price, anchor = tk.CENTER, font = ('Times', 18));
+
 
         # Draw unassigned orders and their buttons in right window
         unassigned_list = bill_obj.table.return_unassigned_orders();
@@ -337,16 +348,20 @@ class ServerView(RestaurantView):
             def seat_handler(_, this_seat = unass_seat):
 
                 # Add the unassigned seat if it was pressed to the bill
-                self.controller.plus_button_pressed(this_seat);
+                self.controller.add_order_pressed(this_seat);
 
 
             draw_unassigned_info_button(self.canvas, unass_seat, (775, 75), 110, seat_handler,
                                         unassigned_list.index(unass_seat));
 
         # Draw pay button
+        self.make_button('PAY', lambda event: self.controller.pay_bill(), location = (590, this_height - 40));
 
         # Create an exit button that returns back to Payment UI
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
+
+        # Draw delete button
+        self.make_button('DELETE', lambda event: self.controller.delete_bill(), location = (350, this_height - 40));
 
 
 
