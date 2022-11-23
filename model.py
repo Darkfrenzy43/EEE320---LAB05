@@ -33,14 +33,16 @@ class OrderStatus(enum.IntEnum):
     """ Enumerated constants of type enum.IntEnum with linear values that track the state of a given order
     item when placed within the KitchenView window. """
 
-    REQUESTED = -1; # damn, there ain't no elegant way to write this out xD
+    REQUESTED = -1;
     PLACED = 0;
-    COOKED = 1;
-    READY = 2;
-    SERVED = 3;
 
-class PaymentStatus(enum.IntEnum):
-    """ Enumerated constants of type enu.intenum with linear values that track the state of a given seat
+    # The rest are not needed.
+
+
+# make note how Bill objects used to use the same status as the seats under PaymentStatus. This was switched
+# in order to keep things clear and organized.
+class SeatStatus(enum.IntEnum):
+    """ Enumerated constants of type enum.IntEnum with linear values that track the state of a given seat
     order within the Payment UI and whether if it's been unassigned to a bill, assigned, or been paid off. """
 
     NO_ITEMS = -1; # This one was added
@@ -49,7 +51,12 @@ class PaymentStatus(enum.IntEnum):
     ASSIGNED = 1;
     PAID = 2;
     
-    REMOVED = 3;
+class BillStatus(enum.Enum):
+    """ Enumerated constatnts of type enum.Enum to track whether a given bill object has been paid or has
+    yet to be paid."""
+    
+    NOT_PAID = 0;
+    PAID = 1;
 
 
 
@@ -144,7 +151,7 @@ class Table:
 
     def return_unassigned_orders(self):
         """ Returns a list of all the orders that are unassigned. """
-        return [this_order for this_order in self.orders if this_order.get_status() == PaymentStatus.UNASSIGNED];
+        return [this_order for this_order in self.orders if this_order.get_status() == SeatStatus.UNASSIGNED];
 
 
     def return_bills(self):
@@ -168,20 +175,20 @@ class Order:
         self.__seat_number = seat_number;
 
         # Adding a status to the seat's order for the payment UI. Default to NO_ITEMS.
-        self.__status = PaymentStatus.NO_ITEMS;
+        self.__status = SeatStatus.NO_ITEMS;
 
 
 
     def advance_status(self):
         """ Method advances current status of current seat order (UNASSIGNED --> ASSIGNED --> PAID). """
-        if int(self.__status) < int(PaymentStatus.PAID):
+        if int(self.__status) < int(SeatStatus.PAID):
             prev_status = self.__status;
-            self.__status = PaymentStatus(int(self.__status) + 1);
+            self.__status = SeatStatus(int(self.__status) + 1);
             print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
 
     def set_unassigned(self):
         """ Method sets the status of the this order object to UNASSIGNED since its bill is being deleted. """
-        self.__status = PaymentStatus.UNASSIGNED;
+        self.__status = SeatStatus.UNASSIGNED;
 
     def get_status(self):
         """ Method returns current status of given seat order. """
@@ -323,8 +330,8 @@ class Bill:
         # Create an array of orders added to this bill
         self.added_orders = [];
 
-        # Intialize status to unassigned. 
-        self.__status = PaymentStatus.UNASSIGNED;
+        # Intialize status to not paid
+        self.__status = BillStatus.NOT_PAID;
 
         # Creating the ID of the bill
         self.ID = ID;
@@ -335,22 +342,26 @@ class Bill:
 
 
     def set_paid(self):
-        """ Sets the bill status to be PaymentStatus.PAID. """
+        """ Sets the bill status to be SeatStatus.PAID. """
 
         # Printing if user is trying to set a bill status that is already PAID to PAID again lmao
-        if self.__status == PaymentStatus.PAID:
+        if self.__status == BillStatus.PAID:
             print("\nERROR: This bill has already been paid.");
             return;
 
         # Otherwise, set the status as needed.
-        self.__status = PaymentStatus.PAID;
+        self.__status = BillStatus.PAID;
+
+    def is_paid(self):
+        """ Method returns True if the current status of the bill is BillStatus.PAID. """
+        return self.__status == BillStatus.PAID;
 
 
     def add_order(self, this_seat_order):
         """ Method adds a seat order at the table to this bill object. Only possible when __status is unpaid.  """
         
         # Add to order only if it's __status is UNASSIGNED
-        if this_seat_order.get_status() == PaymentStatus.UNASSIGNED:
+        if this_seat_order.get_status() == SeatStatus.UNASSIGNED:
 
             # Advance status of the order object
             this_seat_order.advance_status();
@@ -368,7 +379,7 @@ class Bill:
 
         """
         for this_order in self.added_orders:
-            this_order.__status = PaymentStatus.UNASSIGNED
+            this_order.__status = SeatStatus.UNASSIGNED
         """
     
         # Do removal from view somewhere here...
@@ -381,28 +392,3 @@ class Bill:
 
 
 
-""" given code for OrderItem Class
-
-
-class OrderItem:
-
-    # TODO: need to represent item state, not just 'ordered', all methods will need modifying
-    def __init__(self, menu_item):
-        self.details = menu_item
-        self.ordered = False
-
-    def mark_as_ordered(self):
-        self.ordered = True
-
-    def has_been_ordered(self):
-        return self.ordered
-
-    def has_been_served(self):
-        # TODO: correct implementation based on item state
-        return False
-
-    def can_be_cancelled(self):
-        # TODO: correct implementation based on item state
-        return True
-
-"""

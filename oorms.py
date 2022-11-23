@@ -47,14 +47,13 @@ from abc import ABC
 
 from constants import *
 from controller import RestaurantController
-from model import Restaurant, PaymentStatus;
+from model import Restaurant;
 
 
 # --- Defining Classes ---
 
 class RestaurantView(tk.Frame, ABC):
     """  An abstract superclass for the views in the system. """
-
 
 
     def __init__(self, master, restaurant, window_width, window_height, controller_class):
@@ -92,9 +91,11 @@ class RestaurantView(tk.Frame, ABC):
         """ Method calls current controller's create_ui() method which tells this view re-draw the user interface. """
         self.controller.create_ui()
 
+
     def set_controller(self, controller):
         """ Method switches current controller object to <controller> object passed through args. """
         self.controller = controller
+
 
 
 class ServerView(RestaurantView):
@@ -115,7 +116,6 @@ class ServerView(RestaurantView):
 
         # Initializing the printer window
         self.printer_window = printer_window
-
 
 
     def create_restaurant_ui(self):
@@ -170,7 +170,6 @@ class ServerView(RestaurantView):
                 location=BUTTON_BOTTOM_LEFT)
 
 
-
     def draw_table(self, table, location=None, scale=1):
         """ Uses Tkinter's provided canvas methods to draw a given table object out onto the canvas.
 
@@ -199,6 +198,7 @@ class ServerView(RestaurantView):
             seat_ids.append(seat_id)
         return table_id, seat_ids
 
+
     def create_order_ui(self, order):
         """ This method is called within the OrderController object.
 
@@ -206,8 +206,6 @@ class ServerView(RestaurantView):
         when a given seat object is selected from the table user interface.
 
         <order> is the order object that is to track all the orders made for the selected seat. """
-
-
 
         self.canvas.delete(tk.ALL)
         for ix, item in enumerate(self.restaurant.menu_items):
@@ -246,93 +244,86 @@ class ServerView(RestaurantView):
                                 anchor=tk.NW)
 
 
-
-
-    # ----- PAYMENT UI CODE -------
+    # ----- ADDED CODE -------
 
     def create_payment_ui(self, table):
-        """ This shit creates the payment ui that we have in our UI concept design idk.
+        """ Method draws out the Payment UI of a given table object passed through the arguments.
 
-        <table> is the table whose payment UI is being accessed. """
+        <table : Table> : the table whose Payment UI is to be drawn. """
 
-        # Retrieving constant information.
+        # Retrieving UI window size from constants.
         this_width = PAYMENT_VIEW_WIDTH;
         this_height = PAYMENT_VIEW_HEIGHT;
 
-        # Resize the canvas to payment UI dimensions, and clear canvas
+        # Resize the canvas to payment UI dimensions and clear canvas
         self.canvas.config(width = this_width, height = this_height);
         self.canvas.delete(tk.ALL);
 
 
-        # Draw button that creates a bill object.
+        # Draw button that adds a bill object to the view.
         self.make_button('Create Bill.', lambda event: self.controller.add_bill_pressed(), location =
-            (200, this_height - 40));
+        (200, this_height - 40));
 
-
-        # Create an exit button that returns back to table view
+        # Draw button that returns back to the table view.
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
 
 
-        # Getting the seats and the bill objects
+        # Extracting the table's orders associated with each seat, and the already created bill objects.
         seat_orders = table.return_orders();
         bill_objects = table.return_bills();
 
-        # Drawing the seats and their orders above (maybe change this to have the loop happen in the function?)
+        # Drawing the seats and their info onto the canvas.
         for this_order in seat_orders:
             draw_seat_info(self.canvas, this_order, (50, 20), (5, 25), 105, 15);
 
-        # Loop through all the bills in this table
+        # Draw all the bills and their respective buttons onto canvas.
         for this_bill_object in bill_objects:
 
+            # Creating handler for when a given bill object's button gets touched.
+            # When one is pressed, will open the UI of said bill object.
             def this_handler(_, this_bill = this_bill_object):
                 self.controller.bill_object_pressed(this_bill);
 
-            # Draw the bill object
+            # Draw the bill object with its function.
             draw_bill_info_button(self.canvas, this_bill_object, (200, 200), 150, this_handler)
 
 
 
     # Creating the Bill UI now
     def create_bill_ui(self, bill_obj):
-        """ Method creates the bill UI of the <bill_obj> Bill object that is passed through the arguments. """
+        """ Method creates the bill UI of the bill object passed through the arguments.
 
-        # First, configure window size
+        <bill_obj : Bill> : The bill object whose UI is being drawn. """
+
+        # Extracting window info from the constants
         this_height = BILL_VIEW_HEIGHT;
         this_width = BILL_VIEW_WIDTH;
         self.canvas.config(width = this_width, height = this_height);
 
-        # Unpacking info on the bill object
-        curr_status = bill_obj.get_status();
-        bill_ID = bill_obj.ID;
-        table_orders = bill_obj.table_orders;
-        added_orders = bill_obj.added_orders;
-
-
         # Delete everything on the canvas.
         self.canvas.delete(tk.ALL);
 
-        # --- Drawing out the UI layout ---
 
         # Drawing divider
         self.canvas.create_line(700, 0, 700, this_height, width = 2);
 
         # Drawing PAID status
-        if bill_obj.get_status() == PaymentStatus.PAID:
+        if bill_obj.is_paid():
             self.canvas.create_text(350, 150, text = f'PAID', anchor = tk.CENTER, font = ('Times', 30), fill = '#090');
 
-        # Drawing Titles
-        self.canvas.create_text(350, 70, text = f'Bill #{bill_ID}', anchor = tk.CENTER,
+        # Drawing window titles
+        self.canvas.create_text(350, 70, text = f'Bill #{bill_obj.ID}', anchor = tk.CENTER,
                                 font = ('Times', 25, 'underline'));
         self.canvas.create_text(950, 30, text = 'Unassigned Seats', anchor = tk.CENTER,
                                 font = ('Times', 18, 'underline'));
 
-        # Draw orders added to this bill object.
+        # Draw the seat orders added to this bill object.
         self.canvas.create_text(150, 205, text = f'Added Seats', anchor = tk.CENTER, font = ('Times', 18, 'underline'));
         added_orders = [str(order.get_seat_number()) for order in bill_obj.added_orders];
         added_orders.sort(); # yup, we're sorting it
         self.canvas.create_text(150, 230, text = ', '.join(added_orders), anchor = tk.CENTER, font = ('Times', 16));
 
-        # Draw total price of added orders
+        # Draw total price of added seat orders
         total_price = 0;
         for this_order in bill_obj.added_orders:
             total_price += this_order.total_cost();

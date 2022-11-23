@@ -16,7 +16,7 @@
 """
 
 # Is this the right spot for this?
-from model import PaymentStatus; # <-- May end up removing if move applicable code to model.py
+from model import BillStatus; # <-- May end up removing if move applicable code to model.py
 
 
 class Controller:
@@ -237,7 +237,7 @@ class BillController(Controller):
 
         # Can only delete bill if it's status is not PAID. If it is, throw a print message error.
         # todo move into model? for weak coupling
-        if self.this_bill.get_status() == PaymentStatus.PAID:
+        if self.this_bill.get_status() == BillStatus.PAID:
             print("\nERROR: Can not delete a paid bill lmao wut r u doing.");
             return;
 
