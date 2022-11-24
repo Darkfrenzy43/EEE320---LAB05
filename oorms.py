@@ -7,8 +7,14 @@
     the tape of a bill printer.
 
     Notes:
-        - None for now
 
+        1 - The term "seat orders" is used often as a dummy variable name for the Order objects within the Payment
+        UI and the Bill UI. The reason why this name was used for the object was to be explicitly clear that the
+        object being handled under the variable "seat order" is the order which is associated with a seat at a
+        given table.
+
+        2 - A few attributes in the model.py have been switched to private attributes in order to practice good
+        encapsulation. This includes the .items list of the Order object, etc.
 
     Status:
         - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
@@ -226,7 +232,7 @@ class ServerView(RestaurantView):
         """ Draws out the orders placed after pressing a menu item button.  """
 
         x0, h, m = ORDER_ITEM_LOCATION
-        for ix, item in enumerate(order.items):
+        for ix, item in enumerate(order.get_items()):
             y0 = m + ix * h
             self.canvas.create_text(x0, y0, text=item.details.name,
                                     anchor=tk.NW)
@@ -239,7 +245,7 @@ class ServerView(RestaurantView):
 
                 self.make_button('X', handler, size=CANCEL_SIZE, rect_style=CANCEL_STYLE,
                                  location=(x0 - 2*(DOT_SIZE + DOT_MARGIN), y0))
-        self.canvas.create_text(x0, m + len(order.items) * h,
+        self.canvas.create_text(x0, m + len(order.get_items()) * h,
                                 text=f'Total: {order.total_cost():.2f}',
                                 anchor=tk.NW)
 
@@ -317,10 +323,10 @@ class ServerView(RestaurantView):
         self.canvas.create_text(950, 30, text = 'Unassigned Seats', anchor = tk.CENTER,
                                 font = ('Times', 18, 'underline'));
 
-        # Draw the seat orders added to this bill object.
+        # Draw the seat orders added to this bill object (they will be sorted!)
         self.canvas.create_text(150, 205, text = f'Added Seats', anchor = tk.CENTER, font = ('Times', 18, 'underline'));
         added_orders = [str(order.get_seat_number()) for order in bill_obj.added_orders];
-        added_orders.sort(); # yup, we're sorting it
+        added_orders.sort();
         self.canvas.create_text(150, 230, text = ', '.join(added_orders), anchor = tk.CENTER, font = ('Times', 16));
 
         # Draw total price of added seat orders
@@ -330,89 +336,126 @@ class ServerView(RestaurantView):
         self.canvas.create_text(550, 205, text = "Total Price", anchor = tk.CENTER, font = ('Times', 18, 'underline'));
         self.canvas.create_text(550, 230, text = '$%.2f' % total_price, anchor = tk.CENTER, font = ('Times', 18));
 
-
-        # Draw unassigned orders and their buttons in right window
+        # Draw unassigned orders and their buttons in the right window
         unassigned_list = bill_obj.table.return_unassigned_orders();
-        for unass_seat in unassigned_list:
+        for unass_seat_order in unassigned_list:
 
-            # Creating handler when unassigned seat arrow button touched
-            def seat_handler(_, this_seat = unass_seat):
-
-                # Add the unassigned seat if it was pressed to the bill
+            # Handler that adds an unassigned seat to the current bill when
+            # its green plus button is pressed.
+            def seat_handler(_, this_seat = unass_seat_order):
                 self.controller.add_order_pressed(this_seat);
 
+            # Drawing the plus button of the unassigned seat
+            draw_unassigned_info_button(self.canvas, unass_seat_order, (775, 75), 110, 15, seat_handler,
+                                        unassigned_list.index(unass_seat_order));
 
-            draw_unassigned_info_button(self.canvas, unass_seat, (775, 75), 110, seat_handler,
-                                        unassigned_list.index(unass_seat));
-
-        # Draw pay button
+        # Draw the PAY, EXIT, and DELETE button for the bill UI.
         self.make_button('PAY', lambda event: self.controller.pay_bill(), location = (590, this_height - 40));
-
-        # Create an exit button that returns back to Payment UI
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
-
-        # Draw delete button
         self.make_button('DELETE', lambda event: self.controller.delete_bill(), location = (350, this_height - 40));
 
 
 
-def draw_unassigned_info_button(canvas, unass_seat, anchor, interval, handler, index):
-    """ For the BILL UI - function draws the text and button for the unassigned seat objects in right window.
 
-    <<canvas : tk.Canvas> : the canvas of which the UI is being drawn on
-    <unass_seat : Order> : the Order object of the unassigned seat which is to be drawn
-    <anchor : (int, int)> : the coordinates of the first Order object of the UI being drawn. The remaining
-        Order objects are to be positioned in relation to the first one.
-    <interval: int> : the distance the Bill objects are to be drawn from each other (vertically).
-    <handler: function> : the handler that is binded to the pressing of their button.
-    <index: int> : the index the passed in unass_seat is within the unassigned_list. """
 
-    # Retrieving order info
-    x_cood, y_cood = anchor;
-    seat_num = unass_seat.get_seat_number();
-    order_items = unass_seat.items;
 
-    # Drawing out the seat heading
+class Printer(tk.Frame):
+    """ Simulates a physical printer with a monospaced font, a maximum of 40 characters wide.
+
+    To print, call the print() method passing the desired text as a parameter.
+    The text may include \n (newline) characters to indicate line breaks.
+    """
+
+    def __init__(self, master):
+        """ Constructor of the Printer object. """
+
+        # Initialize a bunch of stuff here idk. (lol yee love these comments)
+        super().__init__(master)
+        self.grid()
+        scrollbar = tk.Scrollbar(self)
+        scrollbar.grid(row=0, column=1, sticky=tk.N + tk.S)
+        self.tape = tk.Text(self, wrap=None, bd=0, yscrollcommand=scrollbar.set,
+                            font=TAPE_FONT, state=tk.DISABLED,
+                            width=TAPE_WIDTH, height=VISIBLE_LINES)
+        self.tape.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
+        scrollbar.config(command=self.tape.yview)
+
+    def print(self, text):
+        """ Prints a bill object. """
+
+        # This stuff we changing ?
+        self.tape['state'] = tk.NORMAL
+        self.tape.insert(tk.END, text)
+        self.tape.insert(tk.END, '\n')
+        self.tape['state'] = tk.DISABLED
+        self.tape.see(tk.END)
+
+
+
+# ------ Defining Functions for drawing Payment and Bill UIs ------
+
+def draw_unassigned_info_button(canvas, unass_seat_order, anchor, interval, order_interval, handler, index):
+    """ For the BILL UI - function draws the text and button for a given unassigned seat object in the right window.
+
+    <canvas : tk.Canvas> : the canvas which the UI is being drawn on.
+    <unass_seat_order : Order> : the Order object associated with the unassigned seat to be drawn
+    <anchor : (int, int)> : the coordinates of the first Order object being drawn onto the UI. The remaining
+        Order objects are to be positioned in relation to this first one.
+    <interval: int> : the vertical distance the seat order objects are to be drawn from each other.
+    <order_interval: int> : the vertical distance the OrderItems of each seat order are to be drawn from eachother.
+    <handler: function> : the handler that is bound to the pressing of the button.
+    <index: int> : the index of the unass_seat_order object in the list of unassigned seat orders of the table. """
+
+    # Extracting information to draw seat order
+    x_coord, y_coord = anchor;
+    seat_num = unass_seat_order.get_seat_number();
+    order_items = unass_seat_order.get_items();
+
+    # Drawing out the seat order title (are placed in two columns)
     offset = 0;
     if index > 3:
         offset = 250;
         index -= 4;
-
-    canvas.create_text(x_cood + offset, y_cood + interval * index, text = f'Seat #{seat_num}', anchor = tk.CENTER,
+    canvas.create_text(x_coord + offset, y_coord + interval * index, text = f'Seat #{seat_num}', anchor = tk.CENTER,
                        font = ("Helvetica", 13, "underline"));
 
-    # Position the seat's ordered items in relation to their respective seat heading.
+    # Drawing out each seat order's OrderItem objects below its title. Don't print more than 5 lines.
     item_counter = 0;
     for this_item in order_items:
 
-        # Base case this - if more than 5 lines already printed, don't print anymore
+        # Stop loop if more than 5 lines will be printed...
         if item_counter > 4:
             break;
-
         if item_counter > 3:
             name = "...";
         else:
             name = this_item.details.name;
-                                    # Move 30 to left to align              # Change into order_interval var
-        canvas.create_text(x_cood + offset - 30, (y_cood + interval * index) + 20 + (item_counter * 15), text = name,
-                           anchor = tk.W, font = ("Calibri", 8));
+
+        # Draw text (x_coord shifted 30 px to left to align accordingly)
+        canvas.create_text(x_coord + offset - 30, (y_coord + interval * index) + 20 + (item_counter * order_interval),
+                           text = name, anchor = tk.W, font = ("Calibri", 8));
 
         item_counter += 1;
 
 
-    # Drawing the button associated with the unassigned seat (add vars where you feel is needed)
-    box_style = {'fill' : '#090'}
-    button = canvas.create_rectangle((x_cood + offset) - 53, (y_cood + interval * index) - 8, (x_cood + offset) - 37,
-                                     (y_cood + interval * index) + 8, **box_style);
-    plus_vert_line = canvas.create_line((x_cood + offset) - 44, (y_cood + interval * index) - 5, (x_cood + offset) - 44,
-                       (y_cood + interval * index) + 5, width = 2, fill = '#fff');
-    plus_hori_line = canvas.create_line((x_cood + offset) - 49, (y_cood + interval * index), (x_cood + offset) - 39,
-                                        (y_cood + interval * index), width = 2, fill = '#fff');
+    # Drawing the plus button associated of the unassigned seat
+    # (extra offsets were added to position button accordingly)
+    box_style = BUTTON_PLUS_STYLE;
+    button = canvas.create_rectangle((x_coord + offset) - 53, (y_coord + interval * index) - 8, (x_coord + offset) - 37,
+                                     (y_coord + interval * index) + 8, **box_style);
+    plus_vert_line = canvas.create_line((x_coord + offset) - 44, (y_coord + interval * index) - 5,
+                                        (x_coord + offset) - 44, (y_coord + interval * index) + 5,
+                                        width = 2, fill = '#fff');
+    plus_hori_line = canvas.create_line((x_coord + offset) - 49, (y_coord + interval * index), (x_coord + offset) - 39,
+                                        (y_coord + interval * index), width = 2, fill = '#fff');
 
     # Tag binding the button's elements
     canvas.tag_bind(button, '<Button-1>', handler);
     canvas.tag_bind(plus_vert_line, '<Button-1>', handler);
     canvas.tag_bind(plus_hori_line, '<Button-1>', handler);
+
+
+# todo - left off here.
 
 
 def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in rect_style option here and vert_interval?
@@ -492,7 +535,7 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
     """
 
     # WE WANT TO DRAW OUT A SEAT IF IT HAS ORDER ITEMS MADE WITH IT
-    if len(seat_order.items) > 0:
+    if len(seat_order.get_items()) > 0:
 
         # Unpacking coordinates from anchors
         x_cood, y_cood = anchor;
@@ -521,7 +564,7 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
         # Dummy counter to draw order items on different lines.
         item_counter = 1;
 
-        for this_item in seat_order.items: # shift over left slightly
+        for this_item in seat_order.get_items(): # shift over left slightly
 
             # If there are more than 6 items, have the 7th item be "...", and print no more items
             if item_counter > 6:
@@ -538,44 +581,7 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
                 return;
 
 
-
-
-
-
-class Printer(tk.Frame):
-    """ Simulates a physical printer with a monospaced font, a maximum of 40 characters wide.
-
-    To print, call the print() method passing the desired text as a parameter.
-    The text may include \n (newline) characters to indicate line breaks.
-    """
-
-    def __init__(self, master):
-        """ Constructor of the Printer object. """
-
-        # Initialize a bunch of stuff here idk. (lol yee love these comments)
-        super().__init__(master)
-        self.grid()
-        scrollbar = tk.Scrollbar(self)
-        scrollbar.grid(row=0, column=1, sticky=tk.N + tk.S)
-        self.tape = tk.Text(self, wrap=None, bd=0, yscrollcommand=scrollbar.set,
-                            font=TAPE_FONT, state=tk.DISABLED,
-                            width=TAPE_WIDTH, height=VISIBLE_LINES)
-        self.tape.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
-        scrollbar.config(command=self.tape.yview)
-
-    def print(self, text):
-        """ Prints a bill object. """
-
-        # This stuff we changing ?
-        self.tape['state'] = tk.NORMAL
-        self.tape.insert(tk.END, text)
-        self.tape.insert(tk.END, '\n')
-        self.tape['state'] = tk.DISABLED
-        self.tape.see(tk.END)
-
-
-
-# --- Defining Separate Functions ---
+# --- Drawing other functions ---
 
 def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
     return ((offset_x0 + x0) * scale,

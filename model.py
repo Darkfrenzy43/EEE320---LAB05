@@ -35,6 +35,7 @@ class OrderStatus(enum.IntEnum):
 
     REQUESTED = -1;
     PLACED = 0;
+    SERVED = 1;
 
     # The rest are not needed.
 
@@ -51,12 +52,12 @@ class SeatStatus(enum.IntEnum):
     ASSIGNED = 1;
     PAID = 2;
     
-class BillStatus(enum.Enum):
-    """ Enumerated constatnts of type enum.Enum to track whether a given bill object has been paid or has
+class BillStatus(enum.IntEnum):
+    """ Enumerated constants of type enum.IntEnum to track whether a given bill object has been paid or has
     yet to be paid."""
     
     NOT_PAID = 0;
-    PAID = 1;
+    PAID = 2;           # Make note of why this was set to 2 (to get green color)
 
 
 
@@ -108,7 +109,7 @@ class Table:
         # Get number of active orders of table
         order_count = 0;
         for this_order in self.orders:
-            if len(this_order.items) > 0:
+            if len(this_order.get_items()) > 0:
                 order_count += 1;
 
         if len(self._bills) < order_count:
@@ -127,7 +128,7 @@ class Table:
         """ Returns True if there are still active orders pending that have not been served.
         If there are none, then obviously returns false. """
         for order in self.orders:
-            for item in order.items:
+            for item in order.get_items():
                 if item.has_been_ordered() and not item.has_been_served():
                     return True
         return False
@@ -135,7 +136,7 @@ class Table:
 
     def has_order_for(self, seat):
         """ Function returns a boolean that indicates whether the given seat of number <seat> has ordered yet. """
-        return bool(self.orders[seat].items)
+        return bool(self.orders[seat].get_items())
 
 
     def order_for(self, seat):
@@ -169,7 +170,7 @@ class Order:
 
         Every chair gets their own Order object associated with it. """
 
-        self.items = []
+        self.__items = []
 
         # Adding a seat number attribute to the order to track which seat made the order
         self.__seat_number = seat_number;
@@ -205,16 +206,20 @@ class Order:
         If it's the first item added, advance status from NO_ITEM to UNASSIGNED. """
 
         # Advancing status to UNASSIGNED if no items have been added to order yet
-        if len(self.items) == 0:
+        if len(self.__items) == 0:
             self.advance_status();
 
         item = OrderItem(menu_item)
-        self.items.append(item)
+        self.__items.append(item)
 
 
     def remove_item(self, order_item):
         """ Function simply removes the <item> object passed through args from the self.items list"""
-        self.items.remove(order_item)
+        self.__items.remove(order_item)
+
+    def get_items(self):
+        """ Method returns the OrderItem objects added to this order. """
+        return self.__items;
 
     def place_new_orders(self):
         """ Function goes through the list attribute self.items of the given Order object and
@@ -225,17 +230,17 @@ class Order:
     def remove_unordered_items(self):
         """ Function removes all the items in the list attribute self.items that have an "unordered" status. """
         for item in self.unordered_items():
-            self.items.remove(item)
+            self.__items.remove(item)
 
     def unordered_items(self):
         """ Function returns a list of all OrderItem objects in self.items that have yet
         to have their ordered attribute be set to True """
-        return [item for item in self.items if not item.has_been_ordered()]
+        return [item for item in self.__items if not item.has_been_ordered()]
 
     def total_cost(self):
         """ Function simply calculates the total cost of all the OrderItem
         objects currently in the self.items list attribute. """
-        return sum((item.details.price for item in self.items))
+        return sum((item.details.price for item in self.__items))
 
 class OrderItem:
 

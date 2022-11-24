@@ -82,6 +82,8 @@ BUTTON_BOTTOM_LEFT = (BUTTON_MARGIN[0], SERVER_VIEW_HEIGHT - BUTTON_SIZE[1] - BU
 BUTTON_STYLE = {'fill': '#090', 'outline': '#090'}
 BUTTON_TEXT_STYLE = {'fill': '#fff'}
 
+BUTTON_PLUS_STYLE = {'fill': '#090'}
+
 # Order view constants
 
 MENU_ITEM_SIZE = (150, 20, 5)
