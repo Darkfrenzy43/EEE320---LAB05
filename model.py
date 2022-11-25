@@ -96,12 +96,14 @@ class Table:
         # Create a list of all the bill objects made with the table, and
         # and a counter to keep track of number of added bills (will be used as the bill's ID)
         self._bills = [];
-        self.bill_ID_counter = 0; # -- May need to fix this.
+        self.bill_ID_counter = 0;
 
 
     def add_bill(self):
         """ Method adds a Bill Object to this Table object. Incrementing self.bill_counter whenever a bill is made.
-        Can only create as many bills objects as there are seats who have made orders at the table. """
+        Can only create as many bills objects as there are seats who have made orders at the table.
+
+        Method also returns the added bill. """
 
         # Getting number of active orders of table
         order_count = 0;
@@ -123,7 +125,51 @@ class Table:
 
         --> The bill to remove will always be in the list <-- """
         self._bills.remove(to_remove);
-        self.bill_ID_counter -= 1;   # -- May need to fix this
+
+    def return_bills(self):
+        """ Returns the list of bill objects made with this table. """
+        return self._bills;
+
+    def create_bill_for_each(self):
+        """ Method creates a bill for each unassigned seat of the table,
+        adds the unassigned seats to their respective bills. """
+
+        # Delete all the UNASSIGNED and ASSIGNED bills already made with the table first
+        for i in range(len(self._bills) - 1, -1, -1):
+            self._bills[i].delete();
+
+        # For each unassigned order...
+        for this_seat_order in self.return_unassigned_orders():
+
+            # Create new bill object
+            new_bill = Bill(self, self.bill_ID_counter);
+            self.bill_ID_counter += 1; # Increment obviously
+
+            # Add the order to the bill
+            new_bill.add_order(this_seat_order);
+
+            # Add the bill to the bill list of the table
+            self._bills.append(new_bill);
+
+
+    def all_one_bill(self):
+        """ Method creates one bill object to add all the seat orders with order items
+        in them to said bill. """
+
+        # Delete all the UNASSIGNED and ASSIGNED bills already made with the table first
+        counter = 0;
+        for i in range(len(self._bills) - 1, -1, -1):
+            if self._bills[i].delete():
+                counter += 1;
+        print(f"\n{counter} NUMBER OF BILLS DELETED.")
+
+        # Create a new bill, and add all the seat orders
+        new_bill = Bill(self, self.bill_ID_counter);
+        for this_seat_order in self.return_unassigned_orders():
+            new_bill.add_order(this_seat_order);
+
+        # Add the bill object to the list of bills
+        self._bills.append(new_bill);
 
 
     def has_any_active_orders(self):
@@ -157,9 +203,7 @@ class Table:
         return [this_order for this_order in self.orders if this_order.get_status() == SeatOrderStatus.UNASSIGNED];
 
 
-    def return_bills(self):
-        """ Returns the list of bill objects made with this table. """
-        return self._bills;
+
 
 
 class Order:
@@ -167,10 +211,10 @@ class Order:
     def __init__(self, seat_number):
         """ Constructor for Order object.
 
-        In short, this object is responsible for keeping track of the orders placed by a given
+        This object is responsible for keeping track of the orders placed by a given
         seat in the restaurant.
 
-        Every chair gets their own Order object associated with it.
+        Every seat at a table gets their own Order object created for it.
 
         <seat_number : int> : The number of seat which this Order object is associated with. """
 
@@ -255,12 +299,8 @@ class Order:
         return sum((item.details.price for item in self.__items))
 
 
-#  todo ---- continue cleaning here
 
 class OrderItem:
-
-    # Copied from lab 04 code.
-    # Not sure if this will work right away. We'll see if it needs any changes.
 
     def __init__(self, menu_item):
         """ Constructor for the OrderItem class.
@@ -269,10 +309,10 @@ class OrderItem:
         the information regarding the given OrderItem object) in the instance var self.details. """
 
         # Setting initial status of instantiated OrderItem to REQUESTED.
-        # Refer to oorms.py/Notes 4 for an in depth explanation on status functionality.
-        self.status = OrderStatus.REQUESTED;
+        self.__status = OrderStatus.REQUESTED;
 
-        # Setting __ordered attribute and details of OrderItem
+        # Setting __ordered attribute and details of OrderItem.
+        # (This is not needed so much in this lab)
         self.__ordered = False
         self.details = menu_item
 
@@ -282,8 +322,6 @@ class OrderItem:
     def mark_as_ordered(self):
         """ Sets the self.ordered instance boolean var to true, and advances status from REQUESTED to PLACED.  """
         self.__ordered = True
-
-        # Advancing status from REQUESTED to PLACED.
         self.advance_status();
 
 
@@ -294,29 +332,24 @@ class OrderItem:
 
     def has_been_served(self):
         """ I'm guessing we have this return True if this OrderItem object's current status is SERVED. """
-        return self.status == OrderStatus.SERVED;
+        return self.__status == OrderStatus.SERVED;
 
 
     def can_be_cancelled(self):
         """ Return true if current OrderItem can be cancelled - if status is REQUESTED or PLACED. False otherwise. """
 
         # Return true if current status' value is less than or equal to PLACED's value
-        return int(self.status) <= int(OrderStatus.PLACED);
+        return int(self.__status) <= int(OrderStatus.PLACED);
 
 
     def advance_status(self):
-        """ Method advances current status of current item (PLACED --> COOKED --> READY --> SERVED). """
-
-        # Knowing that int(self.status) returns the certain enumerated value to whatever constant self.status is
-        # currently set to, and that Status(this_int) returns the enumerated constant in the Status() class which
-        # has the value of this_int, we can use the two to elegantly advance the OrderItem's status. Pretty neat, eh.
-        self.status = OrderStatus(int(self.status) + 1);
+        """ Method advances current status of current item (PLACED --> COOKED --> SERVED). """
+        self.__status = OrderStatus(int(self.__status) + 1);
 
 
     def get_status(self):
         """ Method returns the current status of a given OrderItem. """
-        return self.status;
-
+        return self.__status;
 
 
 
@@ -337,29 +370,36 @@ class MenuItem:
 
 class Bill:
 
+    def __init__(self, table, ID):
+        """ Constructor of the Bill object class.
 
-
-    def __init__(self, table : Table, ID : int):
+        <table : Table> : This is the Table object the bill is created under.
+        <ID : int> : Will serve as the number that be used in the Bill's label. """
 
         # Save table as attribute
         self.table = table;
 
-        # Get the seat orders and their statuses for the "right window" of the UI
+        # Get the table's current seat orders
         self.table_orders = table.return_orders();
 
-        # Create an array of orders added to this bill
+        # Create a list to store the added orders of this bill
         self.added_orders = [];
 
-        # Intialize status to not paid
+        # Initialize bill's status to be NOT_PAID upon creation.
         self.__status = BillStatus.NOT_PAID;
 
-        # Creating the ID of the bill
+        # Saving the Bill's ID.
         self.ID = ID;
 
 
     def __del__(self):
         """ Method removes this bill object from its Table object's list of bills. """
         self.table.remove_bill(self);
+
+
+    def get_status(self):
+        """ Method returns current status of bill. """
+        return self.__status;
 
 
     def set_paid(self):
@@ -391,27 +431,27 @@ class Bill:
 
 
     def add_order(self, this_seat_order):
-        """ Method adds a seat order at the table to this bill object. Only possible when __status is unpaid.  """
+        """ Method adds a seat order at the table to this bill object. Only possible when __status is unpaid.
+
+        <this_seat_order : Order> : The Order object that the user intends to add to this bill. """
         
         # Add to order only if it's __status is UNASSIGNED
         if this_seat_order.get_status() == SeatOrderStatus.UNASSIGNED:
 
-            # Advance status of the order object
+            # Advance status of the order object to ASSIGNED
             this_seat_order.advance_status();
 
-            # todo - sort this in terms of seat number?
             self.added_orders.append(this_seat_order);
 
         else:
             print(f"\nCannot add order {this_seat_order.details.name} "
-                  f"to order since is off __status {this_seat_order.__status}.")
+                  f"to order since is of __status {this_seat_order.__status}.")
     
     
     def delete(self):
         """ Method deletes this bill object if is not paid off. Sets all the added orders to unassigned __status.
 
-         If bill object is already PAID off, or user is trying to delete the last bill object of the table,
-         throws an error and stops method.
+         If bill object is already PAID off, throws an error and stops method.
 
          Returns True if bill object was successfully deleted. False otherwise. """
 
@@ -420,23 +460,16 @@ class Bill:
             print("\nERROR: Can not delete a paid bill. ");
             return False;
 
-        # If this bill object is the last one in the table, then throw error since it can't be deleted.
-        if len(self.table.return_bills()) == 1:
-            print("\nERROR: Can't delete all the bills. Must always have minimum of 1.");
-            return False;
-
-        # Lop through the bill's added orders and set them to UNASSIGNED status
+        # Loop through the bill's added orders and set them to UNASSIGNED status
         for this_order in self.added_orders:
-            this_order.__status = SeatOrderStatus.UNASSIGNED
+            this_order.set_unassigned();
 
         # Remove the bill object from the associated table, and return True
         self.__del__();
         return True;
 
 
-    def get_status(self):
-        """ Method returns current status of bill. """
-        return self.__status;
+
 
 
 

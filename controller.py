@@ -168,10 +168,6 @@ class PaymentController(Controller):
         """ Calling .create_ui() method calls the create_payment_ui() back in the view, which
         draws out the payment UI of the selected table. """
 
-        # Add a Bill Object to the table if there were none before (happens when UI opened for first time).
-        if len(self.table.return_bills()) == 0:
-            self.table.add_bill();
-
         self.view.create_payment_ui(self.table);
 
 
@@ -197,6 +193,22 @@ class PaymentController(Controller):
         self.view.set_controller(this_control);
         self.view.update()
 
+    def each_own_bill_pressed(self):
+        """ Method creates a bill for each seat with orders in it status in the UI, and adds those seats. """
+
+        # Calling the appropriate method of the table object, and re-drawing UI.
+        self.table.create_bill_for_each();
+        self.create_ui();
+
+    def all_one_bill_pressed(self):
+        """ Method creates one bill and adds all the seats of the """
+
+        # Calling appropriate method and re-draw UI
+        self.table.all_one_bill();
+        self.create_ui();
+
+    def print_paid_bills_pressed(self):
+        pass;
 
 
 class BillController(Controller):
@@ -242,8 +254,7 @@ class BillController(Controller):
          First, sets all the added seat orders to UNASSIGNED status, then removes bill from the list of
          the associated Table object's bills. If successful in deletion, returns to Payment UI.
 
-         If bill object is already PAID off, or user is trying to delete the last bill object of the table,
-         throws an error and stops method. """
+         If bill object is already PAID off, throws an error and stops method. """
 
         # Attempt to delete bill. If successful, exit the Bill UI.
         if self.bill.delete():

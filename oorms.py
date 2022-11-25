@@ -35,9 +35,9 @@
         accessed, I changed the distance of separation between the printer window and the ServerView window upon
         initialization of the program.
 
-        5 - An intentional design choice of the Payment UI was that there must always be a minimum of one bill
-        associated with each table, and a maximum of the number of seats at the table who have orders with OrderItems
-        added in them. If the user trys to violate any of these, then the program throws an error.
+        5 - An intentional design choice of the Payment UI was that there must always be a maximum bill number of as
+        many  seats at the table who have orders with OrderItems added in them. If the user trys to this,
+        then the program throws an error.
 
 
     Status:
@@ -55,12 +55,9 @@
 
     To do list:
         - Create Bill UI
-            - Fix adding bills after deleting a bill
-            - Make everything look pretty and clean up the fucking code before moving onto tape bill
             - Create pay and print bill button
             - Create the other paymentUI buttons
-
-
+            - Add seat number in bill buttons
 
 
     Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
@@ -287,13 +284,24 @@ class ServerView(RestaurantView):
         self.canvas.config(width = this_width, height = this_height);
         self.canvas.delete(tk.ALL);
 
+        # Draw button that returns back to the table view.
+        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location=(20, this_height - 40));
 
         # Draw button that adds a bill object to the view.
         self.make_button('Add New Bill', lambda event: self.controller.add_bill_pressed(), location =
-        (200, this_height - 40));
+        (195, this_height - 40));
 
-        # Draw button that returns back to the table view.
-        self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
+        # Draw button that automatically adds each seat in the UI to its own bill object
+        self.make_button('Each Own Bill', lambda event: self.controller.each_own_bill_pressed(), location =
+        (370, this_height - 40));
+
+        # Draw button that automatically creates a bill for everyone to be in
+        self.make_button('All One Bill', lambda event: self.controller.all_one_bill_pressed(), location =
+        (545, this_height - 40));
+
+        # Draw button that prints the paid bills?
+        self.make_button('Print Paid Bills', lambda event: self.controller.print_paid_bills_pressed(), location =
+        (720, this_height - 40));
 
 
         # Extracting the table's orders associated with each seat, and the already created bill objects.
@@ -313,7 +321,7 @@ class ServerView(RestaurantView):
                 self.controller.bill_object_pressed(this_bill);
 
             # Draw the bill object with its function.
-            draw_bill_info_button(self.canvas, this_bill_object, (200, 200), 150, this_handler)
+            draw_bill_info_button(self.canvas, this_bill_object, table, (200, 200), 150, this_handler)
 
 
 
@@ -478,11 +486,12 @@ def draw_unassigned_info_button(canvas, unass_seat_order, anchor, interval, orde
 
 
 
-def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler):
+def draw_bill_info_button(canvas, bill_obj, table_obj, anchor, interval, handler):
     """ For the PAYMENT UI - function draws the text each bill object.
 
     <canvas : tk.Canvas> : the canvas of which the UI is being drawn on
     <bill_obj : Bill> : the bill object that is being drawn.
+    <table_obj : Table> : the Table object bill_obj is stored under.
     <anchor : (int, int)> : the coordinates of the first bill object of the UI being drawn. The remaining
         bill objects are to be positioned in relation to the first one.
     <interval: int> : the vertical and horizontal distance the Bill objects are to be drawn from each other .
@@ -503,19 +512,23 @@ def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler):
     box_colours = ['#fff', '#090'];  
     box_style = {'fill': box_colours[curr_status_val], 'outline': '#000'};
 
+    # Find the index of bill_obj within the list Bills of table_obj
+    bill_list = table_obj.return_bills();
+    this_ind = bill_list.index(bill_obj);
 
-    # Draw buttons in two rows todo - fix button and deletion issue. 
-    # Use the int ID of the bill object to place button on first row or second row. 
-    if ID < 4:
-        box = canvas.create_rectangle(x_coord + interval * ID - half_width, y_coord - half_height,
-                                      (x_coord + interval * ID) + half_width, y_coord + half_height, **box_style);
-        label = canvas.create_text(x_coord + interval * ID, y_coord, text = f'Bill #{ID}', anchor = tk.CENTER,
+
+    # Draw buttons in two rows
+    # Use the int ID of the bill object to place button on first row or second row.
+    if this_ind < 4:
+        box = canvas.create_rectangle(x_coord + interval * this_ind - half_width, y_coord - half_height,
+                                      (x_coord + interval * this_ind) + half_width, y_coord + half_height, **box_style);
+        label = canvas.create_text(x_coord + interval * this_ind, y_coord, text = f'Bill #{ID}', anchor = tk.CENTER,
                                    font = ("Calibri", 15));
     else:
-        box = canvas.create_rectangle(x_coord + interval * (ID - 4) - half_width, y_coord + interval - half_height,
-                                      (x_coord + interval * (ID - 4)) + half_width, y_coord + half_height + interval,
-                                      **box_style);
-        label = canvas.create_text(x_coord + interval * (ID - 4), y_coord + interval, text = f'Bill #{ID}',
+        box = canvas.create_rectangle(x_coord + interval * (this_ind - 4) - half_width,
+                                      y_coord + interval - half_height, (x_coord + interval * (this_ind - 4)) +
+                                      half_width, y_coord + half_height + interval, **box_style);
+        label = canvas.create_text(x_coord + interval * (this_ind - 4), y_coord + interval, text = f'Bill #{ID}',
                                    anchor = tk.CENTER, font = ("Calibri", 15))
 
 
