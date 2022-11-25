@@ -15,6 +15,30 @@
 
         2 - A few attributes in the model.py have been switched to private attributes in order to practice good
         encapsulation. This includes the .items list of the Order object, etc.
+        
+        3 - Just noting for myself the codes of the colors in Tkinter:
+                
+                # #fff -> white
+                #999 -> Gray
+                #000 -> Black
+                #900 -> Dark Red
+                #f00 -> Red
+                #990 -> Dark Yellow
+                #0f0 -> Bright Green
+                #090 -> Green
+                #00f -> Bright Blue
+                
+        4 - Made the design choice to configure the size of the ServerView Window when enter Payment UI and Bill UI.
+        This is done to make space for the buttons and all.
+
+        Accordingly, Since I don't want to have the printer window be fully covered when the Payment or Bill UI get
+        accessed, I changed the distance of separation between the printer window and the ServerView window upon
+        initialization of the program.
+
+        5 - An intentional design choice of the Payment UI was that there must always be a minimum of one bill
+        associated with each table, and a maximum of the number of seats at the table who have orders with OrderItems
+        added in them. If the user trys to violate any of these, then the program throws an error.
+
 
     Status:
         - Velasco (November 4, 2022) COMPLETED: Reading code for first time and commenting as needed
@@ -31,9 +55,10 @@
 
     To do list:
         - Create Bill UI
-            - Make a separate bill status to make it more organized.
             - Fix adding bills after deleting a bill
             - Make everything look pretty and clean up the fucking code before moving onto tape bill
+            - Create pay and print bill button
+            - Create the other paymentUI buttons
 
 
 
@@ -111,9 +136,6 @@ class ServerView(RestaurantView):
     including the tables and chairs in it - and when pressed, shows the order views of the associated tables and chairs.
     Same view found in Lab 3. """
 
-    # Boolean for the Payment UI button
-    fuck_button_pressed = False;
-
     def __init__(self, master, restaurant, printer_window):
         """ Constructor to ServerView. """
 
@@ -157,7 +179,7 @@ class ServerView(RestaurantView):
         user interface by drawing it and its selected chairs onto the canvas, and defines the handler for when a given
         seat is clicked on. """
 
-        # Configuring size of window here to be designed size - doesn't do anything if already of that size
+        # Configuring size of window back to the original ServerView size - doesn't do anything if already of that size
         self.canvas.config(width=SERVER_VIEW_WIDTH, height=SERVER_VIEW_HEIGHT);
 
         self.canvas.delete(tk.ALL)
@@ -267,7 +289,7 @@ class ServerView(RestaurantView):
 
 
         # Draw button that adds a bill object to the view.
-        self.make_button('Create Bill.', lambda event: self.controller.add_bill_pressed(), location =
+        self.make_button('Add New Bill', lambda event: self.controller.add_bill_pressed(), location =
         (200, this_height - 40));
 
         # Draw button that returns back to the table view.
@@ -455,86 +477,70 @@ def draw_unassigned_info_button(canvas, unass_seat_order, anchor, interval, orde
     canvas.tag_bind(plus_hori_line, '<Button-1>', handler);
 
 
-# todo - left off here.
 
-
-def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler): # Put in rect_style option here and vert_interval?
-    """ For the PAYMENT UI - function draws the text (not the button!) each bill object.
+def draw_bill_info_button(canvas, bill_obj, anchor, interval, handler):
+    """ For the PAYMENT UI - function draws the text each bill object.
 
     <canvas : tk.Canvas> : the canvas of which the UI is being drawn on
     <bill_obj : Bill> : the bill object that is being drawn.
     <anchor : (int, int)> : the coordinates of the first bill object of the UI being drawn. The remaining
         bill objects are to be positioned in relation to the first one.
-    <interval: int> : the distance the Bill objects are to be drawn from each other .
-    <handler: function> : the handler that is binded to the pressing of this button. """
+    <interval: int> : the vertical and horizontal distance the Bill objects are to be drawn from each other .
+    <handler: function> : the handler that is bound to the pressing of this button. """
 
-    # Retrieving bill info
-    orders = bill_obj.added_orders; # Encapsulate these two?
+    # Getting ID of bill object
     ID = bill_obj.ID;
-    status = bill_obj.get_status();
 
-    # Unpacking coordinates
-    x_cood, y_cood = anchor;
+    # Unpacking anchor coordinates
+    x_coord, y_coord = anchor;
 
-    # Setting up box length (put in constants?)
-    half_width = 50;
-    half_height = 30;
+    # Getting size of half the width and half the height of the button to draw
+    half_width = BILL_BUTTON_SIZE[0]/2;
+    half_height = BILL_BUTTON_SIZE[1]/2;
 
-    # Colours in TKinter: (red, yellow, blue)
-        # #fff -> white
-        # #999 -> Gray
-        # #000 -> Black
-        # #900 -> Dark Red
-        # #f00 -> Red
-        # #990 -> Dark Yellow
-        # #0f0 -> Bright Green
-        # #090 -> Green
-        # #00f -> Bright Blue
-
-    # Determining colour based on status of bill object
+    # Determining colour based on status of bill object (if NOT PAID, is white. If PAID, is green).
     curr_status_val = int(bill_obj.get_status());
-    box_colours = ['#fff', '#ff0', '#090'];         # <-- White -> Yellow -> Green
+    box_colours = ['#fff', '#090'];  
     box_style = {'fill': box_colours[curr_status_val], 'outline': '#000'};
 
 
-    box, label = None, None;
-    # Draw the buttons on two rows (refactor this for real)
+    # Draw buttons in two rows todo - fix button and deletion issue. 
+    # Use the int ID of the bill object to place button on first row or second row. 
     if ID < 4:
-        box = canvas.create_rectangle(x_cood + interval * ID - half_width, y_cood - half_height,
-                                      (x_cood + interval * ID) + half_width, y_cood + half_height, **box_style);
-        label = canvas.create_text(x_cood + interval * ID, y_cood, text = f'Bill #{ID}', anchor = tk.CENTER,
+        box = canvas.create_rectangle(x_coord + interval * ID - half_width, y_coord - half_height,
+                                      (x_coord + interval * ID) + half_width, y_coord + half_height, **box_style);
+        label = canvas.create_text(x_coord + interval * ID, y_coord, text = f'Bill #{ID}', anchor = tk.CENTER,
                                    font = ("Calibri", 15));
     else:
-        box = canvas.create_rectangle(x_cood + interval * (ID - 4) - half_width, y_cood + interval - half_height,
-                                      (x_cood + interval * (ID - 4)) + half_width, y_cood + half_height + interval,
+        box = canvas.create_rectangle(x_coord + interval * (ID - 4) - half_width, y_coord + interval - half_height,
+                                      (x_coord + interval * (ID - 4)) + half_width, y_coord + half_height + interval,
                                       **box_style);
-        label = canvas.create_text(x_cood + interval * (ID - 4), y_cood + interval, text = f'Bill #{ID}',
+        label = canvas.create_text(x_coord + interval * (ID - 4), y_coord + interval, text = f'Bill #{ID}',
                                    anchor = tk.CENTER, font = ("Calibri", 15))
 
-    # Tag binding the passed in handler to this button
+
+    # Tag binding the handler to the button elements
     canvas.tag_bind(box, '<Button-1>', handler);
     canvas.tag_bind(label, '<Button-1>', handler);
 
 
 
 
-
-
 def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_interval):
     """ For the PAYMENT UI - function draws the text for each of the seat orders at the top of the UI.
+    An order is only drawn out if it has any order items put in it. 
 
-    <canvas : tk.Canvas > : the canvas of which the UI is being drawn on
-    <seat_order : Order> : the specific order object of the seat whose info is being drawn out
+    <canvas : tk.Canvas > : the canvas of which the UI is being drawn on.
+    <seat_order : Order> : the specific order object of the seat whose info is being drawn out.
     <anchor : (int, int)> : the location the first seat order is to be drawn onto the canvas. The remaining
         seat orders are to be positioned in relation to the first one.
     <order_anchor : (int, int)> : the location of where the first item of the first seat order is to be drawn.
-        The remaining seat order items for this seat and the rest of the seats are to be positioned in relation
-        to this anchor.
-    <interval : int> : the distance each seat order is to be separated from each other.
+        The remaining seat order items for this seat are to be positioned in relation to this anchor.
+    <interval : int> : the distance each seat order is to be separated from each other horizontally.
     <order_interval : int> : the distance the order items are to be drawn vertically from each other.
     """
 
-    # WE WANT TO DRAW OUT A SEAT IF IT HAS ORDER ITEMS MADE WITH IT
+    # Draw out an order only if it has items in it.
     if len(seat_order.get_items()) > 0:
 
         # Unpacking coordinates from anchors
@@ -544,41 +550,40 @@ def draw_seat_info(canvas, seat_order, anchor, order_anchor, interval, order_int
         # Getting the seat number
         seat_num = seat_order.get_seat_number();
 
-        width = 55;
-        height = 120;
+        # Getting the width and height of the box to be drawn
+        width, height = SEAT_INFO_BOX;
 
-        # Drawing the box of the seat object (extends above the window. Yes, we want that)
+        # Drawing the box of the seat object. (Yes, it extends above the canvas. This was intentional)
+        # If seat is UNASSIGNED, colour box white. If ASSIGNED, colour box yellow. If PAID, colour box green.
         curr_status_val = int(seat_order.get_status());
         box_colours = ['#fff', '#ff0', '#090'];  # <-- White -> Yellow -> Green
         box_style = {'fill': box_colours[curr_status_val], 'outline': '#000'};
         box = canvas.create_rectangle((x_cood + interval * seat_num) - width, y_cood - height,
                                       (x_cood + interval * seat_num) + width, y_cood + height, **box_style);
 
-        # First, draw out the seat number onto the canvas
-        canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER)
+        # Draw the title of the box - literally the seat number
+        canvas.create_text(x_cood + interval * seat_num, y_cood, text = "Seat " + str(seat_num), anchor = tk.CENTER,
+                           font = ('Times', 11, 'underline'));
 
-        # Print out status for now #todo - replace with color
-        canvas.create_text(x_cood + interval * seat_num, y_cood - 10, text = seat_order.get_status(),
-                           anchor = tk.CENTER, font = ("Times", 6));
-
-        # Dummy counter to draw order items on different lines.
+        # Drawing the order items made with this seat. Don't print more than 6 items.
+        # Using a counter to print items on different lines.
         item_counter = 1;
-
-        for this_item in seat_order.get_items(): # shift over left slightly
+        for this_item in seat_order.get_items():
 
             # If there are more than 6 items, have the 7th item be "...", and print no more items
-            if item_counter > 6:
+            if item_counter == 7:
                 name = "...";
+            elif item_counter > 7:
+                return;
             else:
                 name = this_item.details.name;
 
+            # Drawing the text.
             canvas.create_text(x_order + interval * seat_num - 5, y_order + order_interval * item_counter, text=name,
                                     anchor=tk.W, font=("Calibri", 8));
+
             item_counter += 1;
 
-            # As soon as we hit 7 items, stop printing the items (stop function) (find better way)
-            if item_counter > 7:
-                return;
 
 
 # --- Drawing other functions ---
@@ -588,7 +593,6 @@ def scale_and_offset(x0, y0, width, height, offset_x0, offset_y0, scale):
             (offset_y0 + y0) * scale,
             (offset_x0 + x0 + width) * scale,
             (offset_y0 + y0 + height) * scale)
-
 
 
 # --- Entry Point ---
@@ -615,6 +619,6 @@ if __name__ == "__main__":
     sw = root.winfo_width()
     sx = root.winfo_x()
     sy = root.winfo_y()
-    printer_window.geometry(f'{pw}x{ph}+{sx+sw+10}+{sy}')
+    printer_window.geometry(f'{pw}x{ph}+{sx+sw+200}+{sy}')
 
     root.mainloop()

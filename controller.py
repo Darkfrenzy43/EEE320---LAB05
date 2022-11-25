@@ -15,9 +15,6 @@
 
 """
 
-# Is this the right spot for this?
-from model import BillStatus; # <-- May end up removing if move applicable code to model.py
-
 
 class Controller:
 
@@ -30,6 +27,7 @@ class Controller:
 
         self.view = view
         self.restaurant = restaurant
+
 
 
 class RestaurantController(Controller):
@@ -65,9 +63,10 @@ class TableController(Controller):
 
 
     def create_ui(self):
-        """ Calling .create_ui() method calls the create_table_ui() back in the user interface.
+        """ Calling .create_ui() method calls the create_table_ui() back in the view.
         Essentially draws the specific table and associated chairs of this TableController onto the canvas. """
         self.view.create_table_ui(self.table)
+
 
     def seat_touched(self, seat_number):
         """ Sets the current controller of the ServerView window to be the OrderController associated with the
@@ -75,16 +74,14 @@ class TableController(Controller):
         self.view.set_controller(OrderController(self.view, self.restaurant, self.table, seat_number))
         self.view.update()
 
+
     def make_bills(self, printer):
-
-
-        # Switching the payment controller of the bill pressed
+        """ Method is run when the "Create Bills" button is pressed from a given table's UI.
+        Method sets current controller of the ServerView Window to be the PaymentController associated with the table
+        that is to have their bills created. """
         this_control = PaymentController(self.view, self.restaurant, self.table);
         self.view.set_controller(this_control);
         self.view.update();
-
-        # Print shit in the printer
-        printer.print(f'Set up bills for table {self.restaurant.tables.index(self.table)}')
 
 
     def done(self):
@@ -94,12 +91,13 @@ class TableController(Controller):
         self.view.update()
 
 
+
 class OrderController(Controller):
 
     def __init__(self, view, restaurant, table, seat_number):
         """ Constructor of OrderController object.
 
-        <view> is a ServerView object that handles all the drawing of the user interfaces, <restaurant>
+        <view> is a RestaurantView object that handles all the drawing of the user interfaces, <restaurant>
         is the Restaurant object which contains all the data used to draw out the tables, chairs, and orders,
         <table> is a specific table object that was clicked on, <seat_number> is the number of the seat at the table
         that was clicked on. """
@@ -110,9 +108,10 @@ class OrderController(Controller):
 
 
     def create_ui(self):
-        """ Calling .create_ui() method calls the create_table_ui() back in the user interface.
+        """ Calling .create_ui() method calls the create_table_ui() back in the view.
         Essentially draws the order menu associated with the specific chair touched onto the canvas. """
         self.view.create_order_ui(self.order)
+
 
     def add_item(self, menu_item):
         """ Method that adds item to the "to be ordered" list when the order user interface is up.
@@ -122,10 +121,12 @@ class OrderController(Controller):
         self.order.add_item(menu_item)
         self.restaurant.notify_views()
 
+
     def remove(self, order_item):
         """ Method removes passed in <order_item> from the table's order. """
         self.order.remove_item(order_item)
         self.restaurant.notify_views()
+
 
     def update_order(self):
         """ Method responsible for placing the requested orders into the PLACED status and set its __ordered attribute
@@ -134,6 +135,7 @@ class OrderController(Controller):
         self.order.place_new_orders()
         self.view.set_controller(TableController(self.view, self.restaurant, self.table))
         self.restaurant.notify_views()
+
 
     def cancel_changes(self):
         """ Method is responsible for cancelling an order whose items have yet to be placed (still in REQUESTED status).
@@ -145,52 +147,52 @@ class OrderController(Controller):
         self.restaurant.notify_views()
 
 
+
 class PaymentController(Controller):
     """ Handles events from the Payment UI. """
 
-
     def __init__(self, view, restaurant, table):
-        """ Class constructor. """
+        """ Class constructor.
 
-        # Superclass constructor
+        <view : RestaurantView> : The window where the Payment UI is to be drawn.
+        <restaurant : Restaurant> : The restaurant object which contains all the model info of the tables, chairs,
+            orders, etc.
+        <table : Table> : The specific table object whose bills are to be created. """
+
+        # Calling super constructor and saving the table attribute.
         super().__init__(view, restaurant);
-
-        # Saving the table passed in as an attribute
         self.table = table;
 
 
     def create_ui(self):
-        """ Legit creates the payment ui of the table selected. """
+        """ Calling .create_ui() method calls the create_payment_ui() back in the view, which
+        draws out the payment UI of the selected table. """
 
-        # Add a Bill Object to the table if there is none before.
+        # Add a Bill Object to the table if there were none before (happens when UI opened for first time).
         if len(self.table.return_bills()) == 0:
             self.table.add_bill();
-
 
         self.view.create_payment_ui(self.table);
 
 
     def bill_object_pressed(self, bill_obj):
-        """ Handles the event when a bill object is pressed. Switches to bill controller to
-        opens the bill object's UI. """
-
+        """ Is called when a Bill Object's button in the UI is pressed. Switches view's current controller to
+        that of the pressed Bill Object.  """
         this_controller = BillController(self.view, self.restaurant, self.table, bill_obj);
         self.view.set_controller(this_controller);
         self.view.update();
 
 
     def add_bill_pressed(self):
-        """ Method adds a bill object of the associated table. Re-updates UI. """
+        """ This method is called when the "Add Bill" button is pressed.
+        Method adds a new bill object to the table, and re-updates UI. """
         self.table.add_bill();
         self.create_ui();
-        print("\nCurrent have", len(self.table.return_bills()), "bill objects with this table.");
 
 
     def exit_pressed(self):
-        """ Handler that exits Payment UI back to table view. """
-
-
-        # switching controller
+        """ This method is called when "EXIT" button in the UI is pressed. Switches controller back to 
+        the TableController of the selected Table object. """
         this_control = TableController(self.view, self.restaurant, self.table);
         self.view.set_controller(this_control);
         self.view.update()
@@ -200,77 +202,71 @@ class PaymentController(Controller):
 class BillController(Controller):
     """ Handles events from the Bill UI. """
 
-    def __init__(self, view, restaurant, table, this_bill):
-        """ Constructor of the Bill Controller. """
-        super().__init__(view, restaurant);
+    def __init__(self, view, restaurant, table, bill):
+        """ Constructor of the Bill Controller. 
+        
+        <view : RestaurantView> : The window where the Bill UI is to be drawn.
+        <restaurant : Restaurant> : The restaurant object which contains all the model info of the tables, chairs,
+            orders, etc.
+        <table : Table> : The specific table object whose bills are to be created.
+        <bill : Bill> : The specific bill object whose UI is being drawn.
+        """
 
-        # Saving the bill object and the associated table through attributes
-        self.table = table; # I might not need this
-        self.this_bill = this_bill;
+        # Calling super constructor and saving the passed in objects as attributes
+        super().__init__(view, restaurant);
+        self.table = table;
+        self.bill = bill;
 
 
     def create_ui(self):
-        """ legit creates ui back in the view. """
-        self.view.create_bill_ui(self.this_bill);
+        """ Calling .create_ui() method calls the create_bill_ui() back in the view, which
+        draws out the bill UI of the selected Bill object. """
+        self.view.create_bill_ui(self.bill);
+
 
     def pay_bill(self):
-        """ Method sets the current bill to paid status, and all of the added seats to paid status too. """
+        """ Method attempts sets the current bill and all the added seat orders to paid status.
+        Will throw error message if Bill object has no added seat orders to it, or is already in PAID status. """
 
-        # Can only pay off the bill if it has any added_orders in it. If not, print error message and stop function.
-        if len(self.this_bill.added_orders) == 0:
-            print("\nERROR: Can't pay off a bill if there are no added orders.");
-            return;
+        # Attempt to set Bill status to PAID. Method
+        # below will throw error if conditions are not met.
+        self.bill.set_paid();
 
-        # Loop through bills added seat orders, advance their status to PAID. #todo move this in to the model.py?
-        for this_order in self.this_bill.added_orders:
-            this_order.advance_status();
-
-        # Set this bill's status to paid
-        self.this_bill.set_paid();
-
-        # Re-update the UI
+        # Re-update the UI, even if bill failed to be set to PAID.
         self.create_ui();
 
+
     def delete_bill(self):
-        """ Method deletes the current bill by first setting all of its added orders to UNASSIGNED, and
-        then removing the bill from the list of the table's bills. """
+        """ Method attempts to delete the current bill.
 
-        # Can only delete bill if it's status is not PAID. If it is, throw a print message error.
-        # todo move into model? for weak coupling
-        if self.this_bill.get_status() == BillStatus.PAID:
-            print("\nERROR: Can not delete a paid bill lmao wut r u doing.");
-            return;
+         First, sets all the added seat orders to UNASSIGNED status, then removes bill from the list of
+         the associated Table object's bills. If successful in deletion, returns to Payment UI.
 
-        # Check if this is the last bill. If it is, it can't be deleted.
-        if len(self.table.return_bills()) == 1:
-            print("\nERROR: Can't delete all the bills. Must always have minimum of 1 at all times.");
-            return;
+         If bill object is already PAID off, or user is trying to delete the last bill object of the table,
+         throws an error and stops method. """
 
-        # Loop through the bill's added orders, and set unassigned
-        for this_order in self.this_bill.added_orders:
-            this_order.set_unassigned();
-
-        # Switch the controller back to the Payment UI, and delete the bill
-        self.this_bill.delete();
-        self.exit_pressed();
-
-        # Print statement
-        print(self.table.return_bills());
-
+        # Attempt to delete bill. If successful, exit the Bill UI.
+        if self.bill.delete():
+            self.exit_pressed();
 
 
     def add_order_pressed(self, seat_order_pressed):
-        """ Method adds the unassigned seat whose button was pressed to the current bill object whose
-        controller is currently set as the current one. Re-updates UI after adding.  """
+        """ Method adds the unassigned seat whose plus button was pressed to the current bill object.
+        Re-updates UI accordingly.
 
-        self.this_bill.add_order(seat_order_pressed)
+        <seat_order_pressed : Order> : The Order object of the seat who is trying to be added to the current
+        Bill Object. """
+
+        self.bill.add_order(seat_order_pressed)
         self.create_ui();
 
-    def exit_pressed(self):
-        """ Handler that exits Bill UI back to Payment UI. """
 
-        # switching controller
+    def exit_pressed(self):
+        """ Handler is called when 'EXIT' button is pressed in the Bill UI. Switches current controller to the
+        PaymentController associated with the Bill object. """
         this_control = PaymentController(self.view, self.restaurant, self.table);
         self.view.set_controller(this_control);
         self.view.update()
 
+
+# Cleaned and good to go for now.

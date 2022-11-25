@@ -84,6 +84,10 @@ BUTTON_TEXT_STYLE = {'fill': '#fff'}
 
 BUTTON_PLUS_STYLE = {'fill': '#090'}
 
+BILL_BUTTON_SIZE = (100, 60);
+
+SEAT_INFO_BOX = (55, 120);
+
 # Order view constants
 
 MENU_ITEM_SIZE = (150, 20, 5)
