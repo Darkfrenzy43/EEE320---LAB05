@@ -45,19 +45,18 @@
         - Velasco (November 4, 2022): Beginning rough implementation of planned Payment UI
             - Create the UI
                 - Velasco COMPLETED: Re-sizing of the canvas window was found (use canvas.config(...))
-                - Delete: Fuck around playing with the available tkinter shit. Create buttons, print shit, etc.
                 - Velasco COMPLETED: Creating EXIT button that returns UI to table view
                 - Mohammed: Creating the button layout
             - Create the controller
                 - Velasco and Mohammed: Created as needed
             - Create the model
                 - Creating the bill object
+            - ...
+            - Velasco: It's all completed. I'll miss you Mohammed. Thanks for the help man.
+
 
     To do list:
-        - Create Bill UI
-            - Create pay and print bill button
-            - Create the other paymentUI buttons
-            - Add seat number in bill buttons
+        - Redo sequence diagrams
 
 
     Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
@@ -300,7 +299,7 @@ class ServerView(RestaurantView):
         (545, this_height - 40));
 
         # Draw button that prints the paid bills?
-        self.make_button('Print Paid Bills', lambda event: self.controller.print_paid_bills_pressed(), location =
+        self.make_button('Print and Pay Bills', lambda event: self.controller.print_paid_bills_pressed(), location =
         (720, this_height - 40));
 
 
@@ -380,7 +379,7 @@ class ServerView(RestaurantView):
                                         unassigned_list.index(unass_seat_order));
 
         # Draw the PAY, EXIT, and DELETE button for the bill UI.
-        self.make_button('PAY', lambda event: self.controller.pay_bill(), location = (590, this_height - 40));
+        # self.make_button('PAY', lambda event: self.controller.pay_bill(), location = (590, this_height - 40));
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
         self.make_button('DELETE', lambda event: self.controller.delete_bill(), location = (350, this_height - 40));
 
@@ -410,16 +409,91 @@ class Printer(tk.Frame):
         self.tape.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
         scrollbar.config(command=self.tape.yview)
 
-    def print(self, text):
-        """ Prints a bill object. """
 
-        # This stuff we changing ?
+    def print_paid_bills(self, bill_list):
+        """ Prints the list of paid bills with the table. """
+
         self.tape['state'] = tk.NORMAL
-        self.tape.insert(tk.END, text)
-        self.tape.insert(tk.END, '\n')
+
+        # Opening print lines
+        self.tape.insert(tk.END, '\n\n\n');
+        self.tape.insert(tk.END, ">" * 13);
+        self.tape.insert(tk.END, " New Payment ");
+        self.tape.insert(tk.END, "<" * 13);
+
+        # Loop through each bill in bill_list
+        for this_bill in bill_list:
+
+            # Create var to take total bill price
+            total_bill_price = 0;
+
+            # Bill Header
+            self.tape.insert(tk.END, '\n\n');
+            self.tape.insert(tk.END, "-" * 15);
+            self.tape.insert(tk.END, f"  Bill {this_bill.ID}  ");
+            self.tape.insert(tk.END, "-" * 15);
+
+            # Loop through the seat orders of each bill
+            for this_seat_order in this_bill.added_orders:
+
+                # Create var to take total order price
+                total_order_price = 0;
+
+                # Seat header
+                self.tape.insert(tk.END, '\n\n');
+                self.tape.insert(tk.END, f'>>> Seat {this_seat_order.get_seat_number()}:');
+                self.tape.insert(tk.END, '\n');
+
+                # Loop through all seat orders added menu item
+                for this_item in this_seat_order.get_items():
+
+                    # Printing out items
+                    self.tape.insert(tk.END, '\n');
+                    self.tape.insert(tk.END, f'{this_item.details.name}: ');
+                    self.tape.insert(tk.END, '$%.2f' % this_item.details.price);
+
+                    # Add to the total order price
+                    total_order_price += this_item.details.price;
+
+                # Print total price of order
+                self.tape.insert(tk.END, '\n' + '-' * 27 + '\n');
+                self.tape.insert(tk.END, '> TOTAL ORDER PRICE: $%.2f' % total_order_price);
+                self.tape.insert(tk.END, '\n');
+
+                # Add to total bill price
+                total_bill_price += total_order_price;
+
+            # Print total bill price, and end off the bill.
+            self.tape.insert(tk.END, '\n\n');
+            self.tape.insert(tk.END, f'> TOTAL PRICE OF BILL {this_bill.ID}: ');
+            self.tape.insert(tk.END, '$%.2f' % total_bill_price);
+            self.tape.insert(tk.END, '\n\n');
+
+
+        # Finishing print lines of payment
+        self.tape.insert(tk.END, '\n\n\n');
+        self.tape.insert(tk.END, "Thank you for coming to Velasco & Mohammed's OORMS restaurant. "
+                                 "We hope you enjoyed :).");
+        self.tape.insert(tk.END, '\n\n');
+        self.tape.insert(tk.END, ">" * 13);
+        self.tape.insert(tk.END, " End Payment ");
+        self.tape.insert(tk.END, "<" * 13);
         self.tape['state'] = tk.DISABLED
         self.tape.see(tk.END)
 
+
+    def print_error(self):
+        """ Method prints text when an error has occurred in paying the bills. """
+
+        self.tape['state'] = tk.NORMAL
+        self.tape.insert(tk.END, '\n')
+        self.tape.insert(tk.END, "-" * 40)
+        self.tape.insert(tk.END, '\n')
+        self.tape.insert(tk.END, 'ERROR OCCURRED WHEN PAYING BILLS. PLEASE TRY AGAIN.');
+        self.tape.insert(tk.END, '\n')
+        self.tape.insert(tk.END, "-" * 40)
+        self.tape['state'] = tk.DISABLED
+        self.tape.see(tk.END)
 
 
 # ------ Defining Functions for drawing Payment and Bill UIs ------

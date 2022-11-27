@@ -172,6 +172,23 @@ class Table:
         self._bills.append(new_bill);
 
 
+    def set_all_paid(self):
+        """ Method attempts to set all the bills that are not in NOT_PAID status to PAID status.
+        Throws error and returns False if there are no bills that are of NOT_PAID status in the Payment UI.
+        Otherwise, returns True.
+        """
+        flag = False;
+        for this_bill in self._bills:
+            if this_bill.get_status() == BillStatus.NOT_PAID:
+                flag = True;
+                this_bill.set_paid();
+
+        if not flag:
+            print("\nERROR: All bills of the table are already PAID.");
+
+        return flag;
+
+
     def has_any_active_orders(self):
         """ Returns True if there are still active orders pending that have not been served.
         If there are none, then obviously returns false. """
@@ -202,7 +219,9 @@ class Table:
         """ Returns a list of all the orders that are unassigned. """
         return [this_order for this_order in self.orders if this_order.get_status() == SeatOrderStatus.UNASSIGNED];
 
-
+    def return_paid_bills(self):
+        """ Returns a list of all the paid bills with the table. """
+        return [this_bill for this_bill in self._bills if this_bill.get_status() == BillStatus.PAID];
 
 
 

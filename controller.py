@@ -79,7 +79,7 @@ class TableController(Controller):
         """ Method is run when the "Create Bills" button is pressed from a given table's UI.
         Method sets current controller of the ServerView Window to be the PaymentController associated with the table
         that is to have their bills created. """
-        this_control = PaymentController(self.view, self.restaurant, self.table);
+        this_control = PaymentController(self.view, self.restaurant, self.table, printer);
         self.view.set_controller(this_control);
         self.view.update();
 
@@ -151,17 +151,19 @@ class OrderController(Controller):
 class PaymentController(Controller):
     """ Handles events from the Payment UI. """
 
-    def __init__(self, view, restaurant, table):
+    def __init__(self, view, restaurant, table, printer):
         """ Class constructor.
 
         <view : RestaurantView> : The window where the Payment UI is to be drawn.
         <restaurant : Restaurant> : The restaurant object which contains all the model info of the tables, chairs,
             orders, etc.
-        <table : Table> : The specific table object whose bills are to be created. """
+        <table : Table> : The specific table object whose bills are to be created.
+        <printer : Printer> : The printer object where the bills are to be printed on. """
 
-        # Calling super constructor and saving the table attribute.
+        # Calling super constructor and saving the attributes.
         super().__init__(view, restaurant);
         self.table = table;
+        self.printer = printer
 
 
     def create_ui(self):
@@ -174,7 +176,7 @@ class PaymentController(Controller):
     def bill_object_pressed(self, bill_obj):
         """ Is called when a Bill Object's button in the UI is pressed. Switches view's current controller to
         that of the pressed Bill Object.  """
-        this_controller = BillController(self.view, self.restaurant, self.table, bill_obj);
+        this_controller = BillController(self.view, self.restaurant, self.table, bill_obj, self.printer);
         self.view.set_controller(this_controller);
         self.view.update();
 
@@ -208,13 +210,22 @@ class PaymentController(Controller):
         self.create_ui();
 
     def print_paid_bills_pressed(self):
-        pass;
+        """ Method is called when "Print and Pay Bills" button is pressed.
+        Method attempts to print all the bills currently in UI and sets them to all paid status. """
+
+        # Calling appropriate method and re-draw UI
+        if self.table.set_all_paid():
+            self.printer.print_paid_bills(self.table.return_paid_bills());
+            self.create_ui();
+        else:
+            self.printer.print_error();
+
 
 
 class BillController(Controller):
     """ Handles events from the Bill UI. """
 
-    def __init__(self, view, restaurant, table, bill):
+    def __init__(self, view, restaurant, table, bill, printer):
         """ Constructor of the Bill Controller. 
         
         <view : RestaurantView> : The window where the Bill UI is to be drawn.
@@ -222,12 +233,14 @@ class BillController(Controller):
             orders, etc.
         <table : Table> : The specific table object whose bills are to be created.
         <bill : Bill> : The specific bill object whose UI is being drawn.
+        <printer : Printer> : The printer object where the bills are to be printed on.
         """
 
         # Calling super constructor and saving the passed in objects as attributes
         super().__init__(view, restaurant);
         self.table = table;
         self.bill = bill;
+        self.printer = printer;
 
 
     def create_ui(self):
@@ -275,7 +288,7 @@ class BillController(Controller):
     def exit_pressed(self):
         """ Handler is called when 'EXIT' button is pressed in the Bill UI. Switches current controller to the
         PaymentController associated with the Bill object. """
-        this_control = PaymentController(self.view, self.restaurant, self.table);
+        this_control = PaymentController(self.view, self.restaurant, self.table, self.printer);
         self.view.set_controller(this_control);
         self.view.update()
 
