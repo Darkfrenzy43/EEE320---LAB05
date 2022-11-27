@@ -375,7 +375,7 @@ class ServerView(RestaurantView):
                 self.controller.add_order_pressed(this_seat);
 
             # Drawing the plus button of the unassigned seat
-            draw_unassigned_info_button(self.canvas, unass_seat_order, (775, 75), 110, 15, seat_handler,
+            draw_unassigned_seat_button(self.canvas, unass_seat_order, (775, 75), 110, 15, seat_handler,
                                         unassigned_list.index(unass_seat_order));
 
         # Draw the PAY, EXIT, and DELETE button for the bill UI.
@@ -498,7 +498,7 @@ class Printer(tk.Frame):
 
 # ------ Defining Functions for drawing Payment and Bill UIs ------
 
-def draw_unassigned_info_button(canvas, unass_seat_order, anchor, interval, order_interval, handler, index):
+def draw_unassigned_seat_button(canvas, unass_seat_order, anchor, interval, order_interval, handler, index):
     """ For the BILL UI - function draws the text and button for a given unassigned seat object in the right window.
 
     <canvas : tk.Canvas> : the canvas which the UI is being drawn on.
@@ -590,25 +590,45 @@ def draw_bill_info_button(canvas, bill_obj, table_obj, anchor, interval, handler
     bill_list = table_obj.return_bills();
     this_ind = bill_list.index(bill_obj);
 
+    # Turning the list of added order numbers into strings
+    added_orders = [str(order.get_seat_number()) for order in bill_obj.added_orders];
+    added_orders.sort();
 
-    # Draw buttons in two rows
+    # Determining font size of added seats depending on number of added_orders
+    if len(added_orders) > 5:
+        font_size = 10;
+    else:
+        font_size = 14;
+
+    # Draw buttons in two rows,
     # Use the int ID of the bill object to place button on first row or second row.
     if this_ind < 4:
+
         box = canvas.create_rectangle(x_coord + interval * this_ind - half_width, y_coord - half_height,
-                                      (x_coord + interval * this_ind) + half_width, y_coord + half_height, **box_style);
-        label = canvas.create_text(x_coord + interval * this_ind, y_coord, text = f'Bill #{ID}', anchor = tk.CENTER,
-                                   font = ("Calibri", 15));
+                                      (x_coord + interval * this_ind) + half_width, y_coord + half_height,
+                                      **box_style);
+        label = canvas.create_text(x_coord + interval * this_ind, y_coord - 10, text = f'Bill #{ID}',
+                                   anchor = tk.CENTER,  font = ("Calibri", 15, 'underline'));
+        seats = canvas.create_text(x_coord + interval * this_ind, y_coord + 13, text = ', '.join(added_orders)
+                                    , anchor = tk.CENTER, font = ('Times', font_size));
+
     else:
         box = canvas.create_rectangle(x_coord + interval * (this_ind - 4) - half_width,
                                       y_coord + interval - half_height, (x_coord + interval * (this_ind - 4)) +
                                       half_width, y_coord + half_height + interval, **box_style);
-        label = canvas.create_text(x_coord + interval * (this_ind - 4), y_coord + interval, text = f'Bill #{ID}',
-                                   anchor = tk.CENTER, font = ("Calibri", 15))
+        label = canvas.create_text(x_coord + interval * (this_ind - 4), y_coord + interval - 10, text = f'Bill #{ID}',
+                                   anchor = tk.CENTER, font = ("Calibri", 15, 'underline'))
+        seats = canvas.create_text(x_coord + interval * (this_ind - 4), y_coord + interval + 13,
+                                    text = ', '.join(added_orders), anchor = tk.CENTER,
+                                    font = ('Times', font_size));
+
+
 
 
     # Tag binding the handler to the button elements
     canvas.tag_bind(box, '<Button-1>', handler);
     canvas.tag_bind(label, '<Button-1>', handler);
+    canvas.tag_bind(seats, '<Button-1>', handler);
 
 
 
