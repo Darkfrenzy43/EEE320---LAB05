@@ -53,8 +53,18 @@ SEAT_SPACING = 10
 EMPTY_SEAT_STYLE = {'fill': '#ccc', 'outline': '#999'}
 FULL_SEAT_STYLE = {'fill': '#090', 'outline': '#090'}
 
-SERVER_VIEW_WIDTH = 380
+SERVER_VIEW_WIDTH = 380 # Changed for debugging
 SERVER_VIEW_HEIGHT = 500
+
+# ------------ ADDED CONSTANTS ------------
+PAYMENT_VIEW_WIDTH = 840;
+PAYMENT_VIEW_HEIGHT = 500;
+
+BILL_VIEW_WIDTH = 1200;
+BILL_VIEW_HEIGHT = 500;
+
+
+# -----------------------------------------
 
 # Printer constants
 
@@ -71,6 +81,12 @@ BUTTON_BOTTOM_RIGHT = (SERVER_VIEW_WIDTH - BUTTON_SIZE[0] - BUTTON_MARGIN[0],
 BUTTON_BOTTOM_LEFT = (BUTTON_MARGIN[0], SERVER_VIEW_HEIGHT - BUTTON_SIZE[1] - BUTTON_MARGIN[1])
 BUTTON_STYLE = {'fill': '#090', 'outline': '#090'}
 BUTTON_TEXT_STYLE = {'fill': '#fff'}
+
+BUTTON_PLUS_STYLE = {'fill': '#090'}
+
+BILL_BUTTON_SIZE = (100, 60);
+
+SEAT_INFO_BOX = (55, 120);
 
 # Order view constants
 
