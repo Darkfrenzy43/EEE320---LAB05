@@ -261,9 +261,7 @@ class Order:
     def advance_status(self):
         """ Method advances current status of current seat order (UNASSIGNED --> ASSIGNED --> PAID). """
         if int(self.__status) < int(SeatOrderStatus.PAID):
-            prev_status = self.__status;
             self.__status = SeatOrderStatus(int(self.__status) + 1);
-            print(f"\nCurrent __status of bill switched from {prev_status} to {self.__status}. ");
 
 
     def set_unassigned(self):
