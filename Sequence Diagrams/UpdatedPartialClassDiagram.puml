@@ -1,0 +1,154 @@
+@startuml
+!include style.puml
+
+
+title **OORMS**\n Updated Partial Class Diagram\n *Key changes after Lab 5*
+
+'controller.py here
+
+class Controller <<abstract>>{}
+
+class TableController {
+    make_bills(printer : Printer)
+}
+
+class PaymentController {
+    table : Table
+    printer : printer
+
+    __init__(view : RestaurantView, \nrestaurant : Restaurant, table : Table, \nprinter : Printer)
+    create_ui()
+    bill_object_pressed(\nbill_obj_pressed : Bill)
+    add_bill_pressed()
+    exit_pressed()
+    each_own_bill_pressed()
+    all_one_bill_pressed()
+    print_paid_bills_pressed()
+}
+
+class BillController {
+    table : Table
+    bill : Bill
+    printer : Printer
+
+    __init__(view : RestaurantView, \nrestaurant : Restaurant, table : Table, \nprinter : Printer)
+    create_ui()
+    pay_bill()
+    delete_bill()
+    add_order_pressed(\nseat_order_pressed : Order)
+    exit_pressed()
+}
+
+
+' oorms.py code here
+
+class RestaurantView <<abstract>> {}
+
+class ServerView {
+    printer_window : Printer
+
+    create_payment_ui()
+    create_bill_ui()
+}
+
+class tk.Frame
+
+class Printer {
+    scrollbar : tk.ScrollBar
+    tape : tk.Text
+
+    print_paid_bills(bill_list : list[Bill])
+    print_error()
+}
+
+
+
+'model.py code.
+
+class SeatOrderStatus {
+
+}
+
+class BillStatus {
+
+}
+
+class Restaurant {
+}
+
+class Table {
+    _bills : list[Bill]
+    bill_ID_counter : int
+
+    add_bill()
+    remove_bill()
+    return_bills() : list[Bill]
+    create_bill_for_each()
+    all_one_bill()
+    set_all_paid() : bool
+    return_unassigned_orders() : \nlist[Order]
+    return_paid_bills() : \nlist[Bill]
+}
+
+class Order {
+
+    __seat_number : int
+    __status : SeatOrderStatus
+
+    advance_status()
+    set_unassigned()
+    get_status() : SeatOrderStatus
+    get_seat_number()
+}
+
+class Bill {
+
+    table : Table
+    added_orders : list[Order]
+    __status : BillStatus
+    ID : int\
+
+    __init__(table : Table, ID : int)
+    __del__()
+    get_status() : BillStatus
+    set_paid()
+    is_paid() : bool
+    add_order(this_seat_order : Order)
+    delete() : bool
+}
+
+
+
+' Associations
+
+' with the views
+RestaurantView <|-- ServerView
+tk.Frame <|-- Printer
+RestaurantView --> "1 " Controller : controller
+RestaurantView --> " 1   " Restaurant : restaurant
+ServerView --> "1 " Printer : printer_window
+
+
+' with the controllers
+Controller --> "1     " RestaurantView : view
+Controller --> "1     " Restaurant : restaurant
+Controller <|-- TableController
+Controller <|-- PaymentController
+Controller <|-- BillController
+TableController --> "1   " Printer : printer
+TableController ..> PaymentController : <<creates>>
+TableController <.. PaymentController : <<creates>>
+PaymentController ..> BillController : <<creates>>
+PaymentController <.. BillController : <<creates>>
+
+
+' with the model stuff
+Restaurant o--> "0..* " RestaurantView : views
+Restaurant o--> "0..* " Table : tables
+Table o--> "0..* " Bill : _bills
+Table ..> Bill : <<creates>>
+Bill o--> "0..* " Order : added_orders
+Order ..> SeatOrderStatus : <<uses>>
+Bill ..> BillStatus : <<uses>>
+
+@enduml

@@ -195,6 +195,7 @@ class PaymentController(Controller):
         self.view.set_controller(this_control);
         self.view.update()
 
+
     def each_own_bill_pressed(self):
         """ Method creates a bill for each seat with orders in it status in the UI, and adds those seats. """
 
@@ -202,12 +203,14 @@ class PaymentController(Controller):
         self.table.create_bill_for_each();
         self.create_ui();
 
+
     def all_one_bill_pressed(self):
         """ Method creates one bill and adds all the seats of the """
 
         # Calling appropriate method and re-draw UI
         self.table.all_one_bill();
         self.create_ui();
+
 
     def print_paid_bills_pressed(self):
         """ Method is called when "Print and Pay Bills" button is pressed.

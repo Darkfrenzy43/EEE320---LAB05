@@ -399,9 +399,6 @@ class Bill:
         # Save table as attribute
         self.table = table;
 
-        # Get the table's current seat orders
-        self.table_orders = table.return_orders();
-
         # Create a list to store the added orders of this bill
         self.added_orders = [];
 
