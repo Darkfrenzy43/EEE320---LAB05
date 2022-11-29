@@ -20,7 +20,7 @@ controller -> table : add_bill()
 table -> table : get number of seat orders \nwith placed items at table
 
 
-alt seat orders with placed items > 0
+alt number of bills in table < number \nseat orders with placed items
     table --> "new_bill:\nBill" ** : (table, bill_ID_counter)
     table -> bills : append(new_bill)
     table -> table : bill_ID_counter++

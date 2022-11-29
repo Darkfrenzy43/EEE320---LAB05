@@ -1,6 +1,8 @@
 @startuml
 !include style.puml
 
+' I am terribly sorry for the abhorrent mess this created.
+
 
 title **OORMS**\n Updated Partial Class Diagram\n *Key changes after Lab 5*
 
@@ -13,8 +15,6 @@ class TableController {
 }
 
 class PaymentController {
-    table : Table
-    printer : printer
 
     __init__(view : RestaurantView, \nrestaurant : Restaurant, table : Table, \nprinter : Printer)
     create_ui()
@@ -27,17 +27,15 @@ class PaymentController {
 }
 
 class BillController {
-    table : Table
-    bill : Bill
-    printer : Printer
 
-    __init__(view : RestaurantView, \nrestaurant : Restaurant, table : Table, \nprinter : Printer)
+
+    __init__(view : RestaurantView, \nrestaurant : Restaurant, table : Table, \nbill : Bill, printer : Printer)
     create_ui()
-    pay_bill()
     delete_bill()
     add_order_pressed(\nseat_order_pressed : Order)
     exit_pressed()
 }
+
 
 
 ' oorms.py code here
@@ -45,7 +43,7 @@ class BillController {
 class RestaurantView <<abstract>> {}
 
 class ServerView {
-    printer_window : Printer
+
 
     create_payment_ui()
     create_bill_ui()
@@ -63,21 +61,26 @@ class Printer {
 
 
 
+
 'model.py code.
 
 class SeatOrderStatus {
-
+    NO_ITEMS
+    UNASSIGNED
+    ASSIGNED
+    PAID
 }
 
 class BillStatus {
-
+    NOT_PAID
+    PAID
 }
 
 class Restaurant {
 }
 
 class Table {
-    _bills : list[Bill]
+
     bill_ID_counter : int
 
     add_bill()
@@ -88,6 +91,7 @@ class Table {
     set_all_paid() : bool
     return_unassigned_orders() : \nlist[Order]
     return_paid_bills() : \nlist[Bill]
+    return_not_paid_bills() : \nlist[Bill]
 }
 
 class Order {
@@ -119,6 +123,8 @@ class Bill {
 
 
 
+
+
 ' Associations
 
 ' with the views
@@ -136,11 +142,15 @@ Controller <|-- TableController
 Controller <|-- PaymentController
 Controller <|-- BillController
 TableController --> "1   " Printer : printer
+PaymentController --> "1   " Printer : printer
+BillController --> "1   " Printer : printer
 TableController ..> PaymentController : <<creates>>
 TableController <.. PaymentController : <<creates>>
 PaymentController ..> BillController : <<creates>>
 PaymentController <.. BillController : <<creates>>
-
+PaymentController --> " 1      " Table : table
+BillController --> "1    " Table : table
+BillController --> "1  " Bill : bill
 
 ' with the model stuff
 Restaurant o--> "0..* " RestaurantView : views

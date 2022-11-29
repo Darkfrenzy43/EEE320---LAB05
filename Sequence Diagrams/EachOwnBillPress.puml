@@ -21,7 +21,7 @@ controller -> table : create_bill_for_each()
 
 table -> bills : delete all bills \ncurrently in list
 
-loop this_seat_order in list[table's unassigned seat orders]
+loop for this_seat_order in list[table's unassigned seat orders]
 
     table --> new_bill ** : (table, bill_ID_counter)
     table -> table : bill_ID_counter++

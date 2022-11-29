@@ -175,19 +175,26 @@ class Table:
 
     def set_all_paid(self):
         """ Method attempts to set all the bills that are not in NOT_PAID status to PAID status.
-        Throws error and returns False if there are no bills that are of NOT_PAID status in the Payment UI.
-        Otherwise, returns True.
+        Throws error and returns False if there are no bills that are of NOT_PAID status in the Payment UI,
+        or there are unpaid bills that are empty. Otherwise, returns True.
         """
-        flag = False;
-        for this_bill in self._bills:
-            if this_bill.get_status() == BillStatus.NOT_PAID:
-                flag = True;
-                this_bill.set_paid();
 
-        if not flag:
-            print("\nERROR: All bills of the table are already PAID.");
+        # Check if there are any non-paid bills
+        if len(self.return_not_paid_bills()) == 0:
+            print("\nERROR: There are no bills that need to be paid.");
+            return False;
 
-        return flag;
+        # Check if all not paid bills have items in them. If not, throw error
+        for this_bill in self.return_not_paid_bills():
+            if len(this_bill.added_orders) == 0:
+                print("\nERROR: There are empty bills. Ensure all have added seat orders.");
+                return False;
+
+        # Otherwise, set all bills to paid
+        for this_bill in self.return_not_paid_bills():
+            this_bill.set_paid();
+
+        return True;
 
 
     def has_any_active_orders(self):
@@ -223,6 +230,10 @@ class Table:
     def return_paid_bills(self):
         """ Returns a list of all the paid bills with the table. """
         return [this_bill for this_bill in self._bills if this_bill.get_status() == BillStatus.PAID];
+
+    def return_not_paid_bills(self):
+        """ Returns a list of all the not paid bills with the table. """
+        return [this_bill for this_bill in self._bills if this_bill.get_status() == BillStatus.NOT_PAID];
 
 
 
@@ -420,19 +431,7 @@ class Bill:
 
 
     def set_paid(self):
-        """ Sets the bill status to be SeatStatus.PAID.
-
-        Will throw error message if Bill object has no added seat orders to it, or is already in PAID status."""
-
-        # If no orders were added to bill, throw error.
-        if len(self.added_orders) == 0:
-            print("\nERROR: Can't pay off a bill if there are no added orders.");
-            return;
-
-        # Throw error  if user if the bill's status is already PAID.
-        if self.__status == BillStatus.PAID:
-            print("\nERROR: This bill has already been paid.");
-            return;
+        """ Sets the bill status to be BillStatus.PAID. Advances all the added seat orders to PAID as well. """
 
         # Otherwise, Loop through the bills added seat orders and advance their status to PAID
         for this_order in self.added_orders:
@@ -440,6 +439,8 @@ class Bill:
 
         # Set bill's status to PAID.
         self.__status = BillStatus.PAID;
+
+
 
 
     def is_paid(self):

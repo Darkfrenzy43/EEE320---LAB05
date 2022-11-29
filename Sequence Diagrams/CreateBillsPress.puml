@@ -11,8 +11,6 @@ participant "controller:\nTableController" as controller
 
 
 
-
-
 server -> view : [Create Bills] button is pressed
 view -> controller : make_bills(printer_window)
 controller --> "new_controller:\nPaymentController" ** : (view, restaurant, table, printer_window)

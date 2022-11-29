@@ -7,7 +7,7 @@ title OORMS:\nBill Button pressed in Payment UI - Sequence Diagram
 actor Server as server
 
 participant "view:\nServerView" as view
-participant "controller:\nTableController" as controller
+participant "controller:\nPaymentController" as controller
 participant "pressed_bill:\nBill" as this_bill
 
 

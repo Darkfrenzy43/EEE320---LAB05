@@ -27,7 +27,7 @@ alt bill.status == PAID
 
 else else
 
-    loop this_order in list[added seat orders of bill]
+    loop for this_order in list[added seat orders of bill]
 
         bill -> this_order : set_unassigned()
         this_order -> this_order : status = UNASSIGNED
@@ -38,7 +38,7 @@ else else
     bill -> table : remove_bill(bill)
     table -> bills : remove(bill)
 
-    bill -> controller : return flag = (flag == True)
+    bill -> controller : return flag = True
 
 end
 
@@ -56,7 +56,7 @@ end
 
 note left
     ...calls self.controller.
-    create_ui()...
+    create_ui() from update().
     We know how it cont-
     inues from here.
 end note

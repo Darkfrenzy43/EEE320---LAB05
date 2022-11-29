@@ -21,24 +21,24 @@ server -> view : [Print and Pay Bills] button is pressed
 view -> controller : print_paid_bills_pressed()
 controller -> table: set_all_paid()
 
-table -> table : flag = False
 
-loop this_bill in bills
+alt there are no bills that need to be paid
+    table -> table : print error: "No bills to pay off"
+    table -> controller : return flag = False
 
-    alt this_bill.get_status() == NOT_PAID
 
-        table -> table : flag = True
-        table -> this_bill : set_paid()
+else trying to pay for bills that are empty (no items added)
+    table -> table : print error: "There are empty bills"
+    table -> controller : return flag = False
 
-        alt there are no added orders to the bill
 
-            this_bill -> this_bill : print "can't pay bill"
+else else
 
-        else bill status is PAID
+    loop for this_bill in list[table's unpaid bills]
 
-            this_bill -> this_bill : print "can't pay off bill again"
 
-        else else
+            table -> this_bill : set_paid()
+
 
             loop this_order in list[bill's added orders]
 
@@ -54,17 +54,12 @@ loop this_bill in bills
 
             this_bill -> this_bill : status = PAID
 
-        end
-
     end
 
+    table -> controller : return flag = True
+
 end
 
-alt flag == False
-    table -> table : print to user that all bills \nof the table are paid off.
-end
-
-table -> controller : return flag
 
 
 alt set_all_paid() successful (flag == True)
@@ -90,7 +85,7 @@ else set_all_paid() failed (flag == False)
     controller -> printer : print_error();
 
     note left
-        Prints out onto bill
+        Prints out onto printer
         that an error happened.
     end note
 
