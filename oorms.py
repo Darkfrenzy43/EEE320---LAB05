@@ -48,15 +48,15 @@
                 - Velasco COMPLETED: Creating EXIT button that returns UI to table view
                 - Mohammed: Creating the button layout
             - Create the controller
-                - Velasco and Mohammed: Created as needed
+                - Velasco and Mohammed COMPLETED: Created as needed
             - Create the model
-                - Creating the bill object
+                - Velasco COMPLETED: Creating the bill object
             - ...
             - Velasco: It's all completed. I'll miss you Mohammed. Thanks for the help man.
 
 
     To do list:
-        - Redo sequence diagrams
+        - Hand in.
 
 
     Submitting lab group: OCdt Al-Ansar Mohammed, OCdt Velasco
