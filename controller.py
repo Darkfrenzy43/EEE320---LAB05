@@ -249,6 +249,7 @@ class BillController(Controller):
         self.view.create_bill_ui(self.bill);
 
 
+    # oh lol. Guess this method never got used.
     def pay_bill(self):
         """ Method attempts sets the current bill and all the added seat orders to paid status.
         Will throw error message if Bill object has no added seat orders to it, or is already in PAID status. """

@@ -1,0 +1,42 @@
+@startuml
+!include style.puml
+
+title OORMS:\n[Add New Bill] Button in Payment UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "controller:\nPaymentController" as controller
+participant "table:\nTable" as table
+participant "_bills\nlist[Bill]" as bills
+
+
+
+server -> view : [Add New Bill] button is pressed
+view -> controller : add_bill_pressed()
+controller -> table : add_bill()
+
+table -> table : get number of seat orders \nwith placed items at table
+
+
+alt seat orders with placed items > 0
+    table --> "new_bill:\nBill" ** : (table, bill_ID_counter)
+    table -> bills : append(new_bill)
+    table -> table : bill_ID_counter++
+else
+    table -> table : print "cant have more bills than \nseats with placed orders."
+end
+
+controller -> controller : create_ui()
+controller -> view : create_payment_ui(table)
+
+
+
+note left
+    Draws out Payment
+    UI again.
+end note
+
+
+@enduml

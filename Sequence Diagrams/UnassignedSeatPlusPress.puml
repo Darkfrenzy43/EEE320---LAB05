@@ -1,0 +1,46 @@
+@startuml
+!include style.puml
+
+title OORMS:\n[Plus] Button of Unassigned Seat in Bill UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "controller:\nBillController" as controller
+participant "bill:\nBill" as bill
+participant "[['temporary']]\nthis_seat_order:\nOrder" as seat_order
+participant "added_orders\nlist[Orders]" as added_orders
+
+
+server -> view : [Plus] button is pressed
+view -> controller : add_order_pressed(pressed_seat_order)
+controller -> bill : add_order(pressed_seat_order)
+
+alt pressed_seat_order.get_status() == UNASSIGNED
+
+    bill -> pressed_seat_order : advance_status()
+
+    alt status is not PAID
+            pressed_seat_order --> "new_status:\nSeatOrderStatus" ** : int(status) + 1
+            pressed_seat_order -> pressed_seat_order : status = new_status
+    end
+
+    bill -> added_orders : append(pressed_seat_order)
+
+else else
+
+    bill -> bill : print error: "Can't add seat order to bill \nsince seat order has wrong status. "
+
+end
+
+
+controller -> controller : create_ui()
+
+note left
+    Draws out Bill
+    UI again...
+end note
+
+
+@enduml

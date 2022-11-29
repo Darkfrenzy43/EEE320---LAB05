@@ -126,9 +126,11 @@ class Table:
         --> The bill to remove will always be in the list <-- """
         self._bills.remove(to_remove);
 
+
     def return_bills(self):
         """ Returns the list of bill objects made with this table. """
         return self._bills;
+
 
     def create_bill_for_each(self):
         """ Method creates a bill for each unassigned seat of the table,
@@ -157,14 +159,13 @@ class Table:
         in them to said bill. """
 
         # Delete all the UNASSIGNED and ASSIGNED bills already made with the table first
-        counter = 0;
         for i in range(len(self._bills) - 1, -1, -1):
-            if self._bills[i].delete():
-                counter += 1;
-        print(f"\n{counter} NUMBER OF BILLS DELETED.")
+            self._bills[i].delete();
+
 
         # Create a new bill, and add all the seat orders
         new_bill = Bill(self, self.bill_ID_counter);
+        self.bill_ID_counter += 1;
         for this_seat_order in self.return_unassigned_orders():
             new_bill.add_order(this_seat_order);
 
