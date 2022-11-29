@@ -378,10 +378,9 @@ class ServerView(RestaurantView):
             draw_unassigned_seat_button(self.canvas, unass_seat_order, (775, 75), 110, 15, seat_handler,
                                         unassigned_list.index(unass_seat_order));
 
-        # Draw the PAY, EXIT, and DELETE button for the bill UI.
-        # self.make_button('PAY', lambda event: self.controller.pay_bill(), location = (590, this_height - 40));
+        # Draw the EXIT, and DELETE button for the bill UI.
         self.make_button('EXIT', lambda event: self.controller.exit_pressed(), location = (10, this_height - 40));
-        self.make_button('DELETE', lambda event: self.controller.delete_bill(), location = (350, this_height - 40));
+        self.make_button('DELETE', lambda event: self.controller.delete_bill(), location = (590, this_height - 40));
 
 
 
