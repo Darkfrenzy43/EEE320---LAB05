@@ -1,0 +1,64 @@
+@startuml
+!include style.puml
+
+title OORMS:\n[All One Bill] Button in Payment UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "controller:\nPaymentController" as controller
+participant "table:\nTable" as table
+participant "_bills\nlist[Bill]" as bills
+participant "new_bill:\nBill" as new_bill
+participant "[['temporary']]\nthis_seat_order:\nOrder" as seat_order
+
+
+server -> view : [All One Bill] button is pressed
+view -> controller : all_one_bill_pressed()
+controller -> table : all_one_bill()
+
+table -> bills : delete all bills \ncurrently in list
+
+table --> new_bill ** : (table, bill_ID_counter)
+table -> table : bill_ID_counter++
+
+loop for this_seat_order in list[table's unassigned seat orders]
+
+    table -> new_bill : add_order(this_seat_order)
+
+    alt this_seat_order.status == UNASSIGNED
+
+        new_bill -> seat_order : advance_status()
+
+        alt status is not PAID
+            seat_order --> "new_status:\nSeatOrderStatus" ** : int(status) + 1
+            seat_order -> seat_order : status = new_status
+        end
+
+        new_bill -> new_bill : append(this_seat_order)
+
+
+    else else
+
+        new_bill -> new_bill : print "cannot add seat order to \nbill since its status is not UNASSIGNED. "
+
+    end
+
+end
+
+
+table -> bills : append(new_bill)
+
+controller -> controller : create_ui()
+controller -> view : create_payment_ui(table)
+
+
+
+note left
+    Draws out Payment
+    UI again.
+end note
+
+
+@enduml

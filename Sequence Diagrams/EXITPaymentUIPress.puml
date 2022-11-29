@@ -1,0 +1,30 @@
+@startuml
+!include style.puml
+
+title OORMS:\n[EXIT] Button in Payment UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "controller:\nPaymentController" as controller
+
+
+
+
+server -> view : [EXIT] button is pressed
+view -> controller : exit_pressed()
+controller --> "new_controller:\nTableController" ** : (view, restaurant, table)
+controller -> view : set_controller(new_controller)
+controller -> view : update();
+
+
+note left
+    ...calls self.controller.
+    create_ui()...
+    We know how it cont-
+    inues from here.
+end note
+
+
+@enduml

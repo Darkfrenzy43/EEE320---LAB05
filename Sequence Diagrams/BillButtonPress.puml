@@ -1,0 +1,32 @@
+@startuml
+!include style.puml
+
+title OORMS:\nBill Button pressed in Payment UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "controller:\nTableController" as controller
+participant "pressed_bill:\nBill" as this_bill
+
+
+
+
+server -> view : A bill's button is pressed
+view -> controller : bill_object_pressed(pressed_bill)
+
+controller --> "new_controller:\nBillController" ** : (view, restaurant, \ntable, pressed_bill, printer)
+controller -> view : set_controller(new_controller)
+controller -> view : update();
+
+
+note left
+    ...calls self.controller.
+    create_ui()...
+    Draws UI of newly
+    set controller.
+end note
+
+
+@enduml

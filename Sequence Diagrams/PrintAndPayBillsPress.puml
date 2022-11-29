@@ -1,0 +1,104 @@
+@startuml
+!include style.puml
+
+title OORMS:\n[Print and Pay Bills] Button in Payment UI - Sequence Diagram
+
+
+actor Server as server
+
+participant "view:\nServerView" as view
+participant "printer:\nPrinter" as printer
+participant "controller:\nPaymentController" as controller
+participant "table:\nTable" as table
+participant "_bills:\nlist[Bill]" as bills
+participant "[['temporary']]\n this_bill:\nBill" as this_bill
+participant "[['temporary']]\n this_order:\nOrder" as this_order
+
+
+
+
+server -> view : [Print and Pay Bills] button is pressed
+view -> controller : print_paid_bills_pressed()
+controller -> table: set_all_paid()
+
+table -> table : flag = False
+
+loop this_bill in bills
+
+    alt this_bill.get_status() == NOT_PAID
+
+        table -> table : flag = True
+        table -> this_bill : set_paid()
+
+        alt there are no added orders to the bill
+
+            this_bill -> this_bill : print "can't pay bill"
+
+        else bill status is PAID
+
+            this_bill -> this_bill : print "can't pay off bill again"
+
+        else else
+
+            loop this_order in list[bill's added orders]
+
+                this_bill -> this_order : advance_status()
+
+                 alt status is not PAID
+                    this_order --> "new_status:\nSeatOrderStatus" ** : int(status) + 1
+                    this_order -> this_order : status = new_status
+
+                 end
+
+            end
+
+            this_bill -> this_bill : status = PAID
+
+        end
+
+    end
+
+end
+
+alt flag == False
+    table -> table : print to user that all bills \nof the table are paid off.
+end
+
+table -> controller : return flag
+
+
+alt set_all_paid() successful (flag == True)
+
+    controller -> table : get just paid bills
+    table -> controller : return list[paid_bills]
+
+    controller -> printer : print_paid_bills(list[paid_bills])
+
+    note left
+        Prints out the bill
+        info on the printer tape.
+    end note
+
+    controller -> controller : create_ui();
+
+    note left
+        ...redraws the Payment UI.
+    end note
+
+else set_all_paid() failed (flag == False)
+
+    controller -> printer : print_error();
+
+    note left
+        Prints out onto bill
+        that an error happened.
+    end note
+
+
+end
+
+
+
+
+
+@enduml
